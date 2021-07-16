@@ -15,7 +15,7 @@ import CryptoLib from "react-native-crypto-lib";
 
 // ...
 
-const result = await CryptoLib.multiply(3, 7);
+const result = await CryptoLib.randomNumber();
 ```
 
 ## Contributing
