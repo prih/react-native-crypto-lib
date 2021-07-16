@@ -1,5 +1,7 @@
 package com.reactnativecryptolib;
 
+import android.os.AsyncTask;
+import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -36,8 +38,25 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void randomNumber(Promise promise) {
-        promise.resolve(randomNumber());
+      AsyncTask.execute(new Runnable() {
+        @Override
+        public void run() {
+          promise.resolve(randomNumber());
+        }
+      });
+    }
+
+    @ReactMethod
+    public void randomBytes(int length, Promise promise) {
+      AsyncTask.execute(new Runnable() {
+        @Override
+        public void run() {
+          byte[] bytes = randomBytes(length);
+          promise.resolve(Base64.encodeToString(bytes, Base64.NO_PADDING | Base64.NO_WRAP));
+        }
+      });
     }
 
     public static native int randomNumber();
+    public static native byte[] randomBytes(int length);
 }

@@ -15,7 +15,9 @@ import CryptoLib from "react-native-crypto-lib";
 
 // ...
 
-const result = await CryptoLib.randomNumber();
+const random_uint32 = await CryptoLib.randomNumber();
+
+const random_buffer = await CryptoLib.randomBytes(32);
 ```
 
 ## Contributing
