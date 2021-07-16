@@ -1,7 +1,7 @@
 import { NativeModules } from 'react-native';
 
 type CryptoLibType = {
-  multiply(a: number, b: number): Promise<number>;
+  randomNumber(): Promise<number>;
 };
 
 const { CryptoLib } = NativeModules;

@@ -1,5 +1,7 @@
 package com.reactnativecryptolib;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.facebook.react.bridge.Promise;
@@ -16,6 +18,15 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
         super(reactContext);
     }
 
+    static {
+      try {
+        System.loadLibrary("crypto");
+        Log.d("libcrypto", "-------- libcrypto-code: loaded");
+      } catch (Exception e) {
+        Log.d("libcrypto", "-------- libcrypto-code: loaded");
+      }
+    }
+
     @Override
     @NonNull
     public String getName() {
@@ -23,12 +34,10 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     }
 
 
-    // Example method
-    // See https://reactnative.dev/docs/native-modules-android
     @ReactMethod
-    public void multiply(int a, int b, Promise promise) {
-        promise.resolve(a * b);
+    public void randomNumber(Promise promise) {
+        promise.resolve(randomNumber());
     }
 
-    public static native int nativeMultiply(int a, int b);
+    public static native int randomNumber();
 }

@@ -1,18 +1,16 @@
 #import "CryptoLib.h"
 
+#import "rand.h"
+
 @implementation CryptoLib
 
 RCT_EXPORT_MODULE()
 
-// Example method
-// See // https://reactnative.dev/docs/native-modules-ios
-RCT_REMAP_METHOD(multiply,
-                 multiplyWithA:(nonnull NSNumber*)a withB:(nonnull NSNumber*)b
+RCT_REMAP_METHOD(randomNumber,
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
-  NSNumber *result = @([a floatValue] * [b floatValue]);
-
+  NSNumber *result = [NSNumber numberWithUnsignedInt:random32()];
   resolve(result);
 }
 

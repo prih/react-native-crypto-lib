@@ -7,7 +7,7 @@ export default function App() {
   const [result, setResult] = React.useState<number | undefined>();
 
   React.useEffect(() => {
-    CryptoLib.multiply(3, 7).then(setResult);
+    CryptoLib.randomNumber().then(setResult);
   }, []);
 
   return (
