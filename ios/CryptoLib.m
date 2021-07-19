@@ -33,17 +33,49 @@ RCT_REMAP_METHOD(randomBytes,
 }
 
 RCT_REMAP_METHOD(sha1,
-                 withData:(NSString *)data
+                 withDataForSHA1:(NSString *)data
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
-    uint8_t *digest[SHA1_DIGEST_LENGTH];
+    uint8_t *hash[SHA1_DIGEST_LENGTH];
 
-    sha1_Raw([raw_data bytes], [raw_data length], digest);
+    sha1_Raw([raw_data bytes], [raw_data length], hash);
 
-    NSData *result = [NSData dataWithBytes:digest length:SHA1_DIGEST_LENGTH];
+    NSData *result = [NSData dataWithBytes:hash length:SHA1_DIGEST_LENGTH];
+    resolve([result base64EncodedStringWithOptions:0]);
+  });
+}
+
+RCT_REMAP_METHOD(sha256,
+                 withDataForSHA256:(NSString *)data
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
+    uint8_t *hash[SHA256_DIGEST_LENGTH];
+
+    sha256_Raw([raw_data bytes], [raw_data length], hash);
+
+    NSData *result = [NSData dataWithBytes:hash length:SHA256_DIGEST_LENGTH];
+    resolve([result base64EncodedStringWithOptions:0]);
+  });
+}
+
+RCT_REMAP_METHOD(sha512,
+                 withDataForSHA512:(NSString *)data
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
+    uint8_t *hash[SHA512_DIGEST_LENGTH];
+
+    sha512_Raw([raw_data bytes], [raw_data length], hash);
+
+    NSData *result = [NSData dataWithBytes:hash length:SHA512_DIGEST_LENGTH];
     resolve([result base64EncodedStringWithOptions:0]);
   });
 }

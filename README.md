@@ -17,10 +17,12 @@ import { Buffer } from 'buffer';
 // ...
 
 const random_uint32 = await CryptoLib.randomNumber();
-
 const random_buffer = await CryptoLib.randomBytes(32);
 
+// sha2
 const sha1_buffer = await CryptoLib.sha1(Buffer.from('Hello World'));
+const sha256_buffer = await CryptoLib.sha256(Buffer.from('Hello World'));
+const sha512_buffer = await CryptoLib.sha512(Buffer.from('Hello World'));
 ```
 
 ## Contributing

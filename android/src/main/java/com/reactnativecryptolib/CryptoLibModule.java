@@ -69,7 +69,33 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
       });
     }
 
+    @ReactMethod
+    public void sha256(final String data, Promise promise) {
+      AsyncTask.execute(new Runnable() {
+        @Override
+        public void run() {
+          byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
+          byte[] hash = sha256(bytes);
+          promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
+        }
+      });
+    }
+
+    @ReactMethod
+    public void sha512(final String data, Promise promise) {
+      AsyncTask.execute(new Runnable() {
+        @Override
+        public void run() {
+          byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
+          byte[] hash = sha512(bytes);
+          promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
+        }
+      });
+    }
+
     public static native int randomNumber();
     public static native byte[] randomBytes(int length);
     public static native byte[] sha1(byte[] data);
+    public static native byte[] sha256(byte[] data);
+    public static native byte[] sha512(byte[] data);
 }
