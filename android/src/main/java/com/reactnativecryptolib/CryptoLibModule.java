@@ -41,7 +41,12 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
       AsyncTask.execute(new Runnable() {
         @Override
         public void run() {
-          promise.resolve(randomNumber());
+          try {
+            promise.resolve(randomNumber());
+          } catch (Exception ex) {
+            ex.printStackTrace();
+            promise.reject("Error", ex.toString());
+          }
         }
       });
     }
@@ -51,116 +56,54 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
       AsyncTask.execute(new Runnable() {
         @Override
         public void run() {
-          byte[] bytes = randomBytes(length);
-          promise.resolve(Base64.encodeToString(bytes, Base64.NO_PADDING | Base64.NO_WRAP));
+          try {
+            byte[] bytes = randomBytes(length);
+            promise.resolve(Base64.encodeToString(bytes, Base64.NO_PADDING | Base64.NO_WRAP));
+          } catch (Exception ex) {
+            ex.printStackTrace();
+            promise.reject("Error", ex.toString());
+          }
         }
       });
     }
 
     @ReactMethod
-    public void sha1(final String data, Promise promise) {
+    public void hash(final int type, final String data, Promise promise) {
       AsyncTask.execute(new Runnable() {
         @Override
         public void run() {
-          byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
-          byte[] hash = sha1(bytes);
-          promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
+          try {
+            byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
+            byte[] hash = hash(type, bytes);
+            promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
+          } catch (Exception ex) {
+            ex.printStackTrace();
+            promise.reject("Error", ex.toString());
+          }
         }
       });
     }
 
     @ReactMethod
-    public void sha256(final String data, Promise promise) {
+    public void hmac(final int type, final String key, final String data, Promise promise) {
       AsyncTask.execute(new Runnable() {
         @Override
         public void run() {
-          byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
-          byte[] hash = sha256(bytes);
-          promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
-        }
-      });
-    }
-
-    @ReactMethod
-    public void sha512(final String data, Promise promise) {
-      AsyncTask.execute(new Runnable() {
-        @Override
-        public void run() {
-          byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
-          byte[] hash = sha512(bytes);
-          promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
-        }
-      });
-    }
-
-    @ReactMethod
-    public void sha3_256(final String data, Promise promise) {
-      AsyncTask.execute(new Runnable() {
-        @Override
-        public void run() {
-          byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
-          byte[] hash = sha3_256(bytes);
-          promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
-        }
-      });
-    }
-
-    @ReactMethod
-    public void sha3_512(final String data, Promise promise) {
-      AsyncTask.execute(new Runnable() {
-        @Override
-        public void run() {
-          byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
-          byte[] hash = sha3_512(bytes);
-          promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
-        }
-      });
-    }
-
-    @ReactMethod
-    public void keccak_256(final String data, Promise promise) {
-      AsyncTask.execute(new Runnable() {
-        @Override
-        public void run() {
-          byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
-          byte[] hash = keccak_256(bytes);
-          promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
-        }
-      });
-    }
-
-    @ReactMethod
-    public void keccak_512(final String data, Promise promise) {
-      AsyncTask.execute(new Runnable() {
-        @Override
-        public void run() {
-          byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
-          byte[] hash = keccak_512(bytes);
-          promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
-        }
-      });
-    }
-
-    @ReactMethod
-    public void ripemd160(final String data, Promise promise) {
-      AsyncTask.execute(new Runnable() {
-        @Override
-        public void run() {
-          byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
-          byte[] hash = ripemd160(bytes);
-          promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
+          try {
+            byte[] raw_key = Base64.decode(key, Base64.NO_PADDING);
+            byte[] raw_data = Base64.decode(data, Base64.NO_PADDING);
+            byte[] hash = hmac(type, raw_key, raw_data);
+            promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
+          } catch (Exception ex) {
+            ex.printStackTrace();
+            promise.reject("Error", ex.toString());
+          }
         }
       });
     }
 
     public static native int randomNumber();
     public static native byte[] randomBytes(int length);
-    public static native byte[] sha1(byte[] data);
-    public static native byte[] sha256(byte[] data);
-    public static native byte[] sha512(byte[] data);
-    public static native byte[] sha3_256(byte[] data);
-    public static native byte[] sha3_512(byte[] data);
-    public static native byte[] keccak_256(byte[] data);
-    public static native byte[] keccak_512(byte[] data);
-    public static native byte[] ripemd160(byte[] data);
+    public static native byte[] hash(int type, byte[] data);
+    public static native byte[] hmac(int type, byte[] key, byte[] data);
 }

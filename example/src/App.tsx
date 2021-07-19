@@ -1,19 +1,28 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text } from 'react-native';
-import CryptoLib from 'react-native-crypto-lib';
+import CryptoLib, { HASH, HMAC } from 'react-native-crypto-lib';
 import { Buffer } from 'buffer';
 
+const data = Buffer.from('Hello World');
+
 export default function App() {
-  const [result, setResult] = React.useState<Buffer | undefined>();
+  const [result_hash, setResultHash] = React.useState<Buffer | undefined>();
+  const [result_hmac, setResultHmac] = React.useState<Buffer | undefined>();
 
   React.useEffect(() => {
-    CryptoLib.ripemd160(Buffer.from('Hello World')).then(setResult);
+    CryptoLib.hash(HASH.SHA256, data).then(setResultHash);
+  }, []);
+
+  React.useEffect(() => {
+    const key = Buffer.from('0001020304050607');
+    CryptoLib.hmac(HMAC.SHA256, key, data).then(setResultHmac);
   }, []);
 
   return (
     <View style={styles.container}>
-      <Text>Result: {result?.toString('hex')}</Text>
+      <Text>HASH: {result_hash?.toString('hex')}</Text>
+      <Text>HMAC: {result_hmac?.toString('hex')}</Text>
     </View>
   );
 }

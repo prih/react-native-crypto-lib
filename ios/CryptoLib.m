@@ -5,8 +5,25 @@
 #import "sha2.h"
 #import "sha3.h"
 #import "ripemd160.h"
+#import "hmac.h"
 
 @implementation CryptoLib
+
+typedef enum {
+  SHA1,
+  SHA256,
+  SHA512,
+  SHA3_256,
+  SHA3_512,
+  KECCAK_256,
+  KECCAK_512,
+  RIPEMD160,
+} HASH_TYPE;
+
+typedef enum {
+  HMAC_SHA256,
+  HMAC_SHA512
+} HMAC_TYPE;
 
 RCT_EXPORT_MODULE()
 
@@ -37,138 +54,101 @@ RCT_REMAP_METHOD(randomBytes,
   });
 }
 
-RCT_REMAP_METHOD(sha1,
-                 withDataForSHA1:(NSString *)data
+RCT_REMAP_METHOD(hash,
+                 withHashType:(int)algorithm
+                 withData:(NSString *)data
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
     NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
-    uint8_t *hash = (uint8_t *) malloc(SHA1_DIGEST_LENGTH);
 
-    sha1_Raw([raw_data bytes], [raw_data length], hash);
+    uint8_t *hash;
+    NSData *result;
 
-    NSData *result = [NSData dataWithBytes:hash length:SHA1_DIGEST_LENGTH];
+    switch(algorithm){
+      case SHA1:
+        hash = (uint8_t *) malloc(SHA1_DIGEST_LENGTH);
+        sha1_Raw([raw_data bytes], [raw_data length], hash);
+        result = [NSData dataWithBytes:hash length:SHA1_DIGEST_LENGTH];
+        break;
+      case SHA256:
+        hash = (uint8_t *) malloc(SHA256_DIGEST_LENGTH);
+        sha256_Raw([raw_data bytes], [raw_data length], hash);
+        result = [NSData dataWithBytes:hash length:SHA256_DIGEST_LENGTH];
+        break;
+      case SHA512:
+        hash = (uint8_t *) malloc(SHA512_DIGEST_LENGTH);
+        sha1_Raw([raw_data bytes], [raw_data length], hash);
+        result = [NSData dataWithBytes:hash length:SHA512_DIGEST_LENGTH];
+        break;
+      case SHA3_256:
+        hash = (uint8_t *) malloc(SHA3_256_DIGEST_LENGTH);
+        sha3_512([raw_data bytes], [raw_data length], hash);
+        result = [NSData dataWithBytes:hash length:SHA3_256_DIGEST_LENGTH];
+        break;
+      case SHA3_512:
+        hash = (uint8_t *) malloc(SHA3_512_DIGEST_LENGTH);
+        sha3_512([raw_data bytes], [raw_data length], hash);
+        result = [NSData dataWithBytes:hash length:SHA3_512_DIGEST_LENGTH];
+        break;
+      case KECCAK_256:
+        hash = (uint8_t *) malloc(SHA3_256_DIGEST_LENGTH);
+        keccak_256([raw_data bytes], [raw_data length], hash);
+        result = [NSData dataWithBytes:hash length:SHA3_256_DIGEST_LENGTH];
+        break;
+      case KECCAK_512:
+        hash = (uint8_t *) malloc(SHA3_512_DIGEST_LENGTH);
+        keccak_512([raw_data bytes], [raw_data length], hash);
+        result = [NSData dataWithBytes:hash length:SHA3_512_DIGEST_LENGTH];
+        break;
+      case RIPEMD160:
+        hash = (uint8_t *) malloc(RIPEMD160_DIGEST_LENGTH);
+        ripemd160([raw_data bytes], [raw_data length], hash);
+        result = [NSData dataWithBytes:hash length:RIPEMD160_DIGEST_LENGTH];
+        break;
+      
+      default:
+        reject(@"Error", @"unknown hash type", nil);
+        return;
+    }
+
     free(hash);
     resolve([result base64EncodedStringWithOptions:0]);
   });
 }
 
-RCT_REMAP_METHOD(sha256,
-                 withDataForSHA256:(NSString *)data
+RCT_REMAP_METHOD(hmac,
+                 withHashType:(int)algorithm
+                 withKey:(NSString *)key
+                 withData:(NSString *)data
                  withResolver:(RCTPromiseResolveBlock)resolve
                  withRejecter:(RCTPromiseRejectBlock)reject)
 {
   dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSData *raw_key = [[NSData alloc]initWithBase64EncodedString:key options:0];
     NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
-    uint8_t *hash = (uint8_t *) malloc(SHA256_DIGEST_LENGTH);
 
-    sha256_Raw([raw_data bytes], [raw_data length], hash);
+    uint8_t *hmac;
+    NSData *result;
 
-    NSData *result = [NSData dataWithBytes:hash length:SHA256_DIGEST_LENGTH];
-    free(hash);
-    resolve([result base64EncodedStringWithOptions:0]);
-  });
-}
+    switch(algorithm){
+      case HMAC_SHA256:
+        hmac = (uint8_t *) malloc(SHA256_DIGEST_LENGTH);
+        hmac_sha256([raw_key bytes], [raw_key length], [raw_data bytes], [raw_data length], hmac);
+        result = [NSData dataWithBytes:hmac length:SHA256_DIGEST_LENGTH];
+        break;
+      case HMAC_SHA512:
+        hmac = (uint8_t *) malloc(SHA512_DIGEST_LENGTH);
+        hmac_sha512([raw_key bytes], [raw_key length], [raw_data bytes], [raw_data length], hmac);
+        result = [NSData dataWithBytes:hmac length:SHA512_DIGEST_LENGTH];
+        break;
+      default:
+        reject(@"Error", @"unknown hash type", nil);
+        return;
+    }
 
-RCT_REMAP_METHOD(sha512,
-                 withDataForSHA512:(NSString *)data
-                 withResolver:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
-{
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
-    uint8_t *hash = (uint8_t *) malloc(SHA512_DIGEST_LENGTH);
-
-    sha512_Raw([raw_data bytes], [raw_data length], hash);
-
-    NSData *result = [NSData dataWithBytes:hash length:SHA512_DIGEST_LENGTH];
-    free(hash);
-    resolve([result base64EncodedStringWithOptions:0]);
-  });
-}
-
-RCT_REMAP_METHOD(sha3_256,
-                 withDataForSHA3_256:(NSString *)data
-                 withResolver:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
-{
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
-    uint8_t *hash = (uint8_t *) malloc(SHA3_256_DIGEST_LENGTH);
-
-    sha3_256([raw_data bytes], [raw_data length], hash);
-
-    NSData *result = [NSData dataWithBytes:hash length:SHA3_256_DIGEST_LENGTH];
-    free(hash);
-    resolve([result base64EncodedStringWithOptions:0]);
-  });
-}
-
-RCT_REMAP_METHOD(sha3_512,
-                 withDataForSHA3_512:(NSString *)data
-                 withResolver:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
-{
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
-    uint8_t *hash = (uint8_t *) malloc(SHA3_512_DIGEST_LENGTH);
-
-    sha3_512([raw_data bytes], [raw_data length], hash);
-
-    NSData *result = [NSData dataWithBytes:hash length:SHA3_512_DIGEST_LENGTH];
-    free(hash);
-    resolve([result base64EncodedStringWithOptions:0]);
-  });
-}
-
-RCT_REMAP_METHOD(keccak_256,
-                 withDataForKeccak_256:(NSString *)data
-                 withResolver:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
-{
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
-    uint8_t *hash = (uint8_t *) malloc(SHA3_256_DIGEST_LENGTH);
-
-    keccak_256([raw_data bytes], [raw_data length], hash);
-
-    NSData *result = [NSData dataWithBytes:hash length:SHA3_256_DIGEST_LENGTH];
-    free(hash);
-    resolve([result base64EncodedStringWithOptions:0]);
-  });
-}
-
-RCT_REMAP_METHOD(keccak_512,
-                 withDataForKeccak_512:(NSString *)data
-                 withResolver:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
-{
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
-    uint8_t *hash = (uint8_t *) malloc(SHA3_512_DIGEST_LENGTH);
-
-    keccak_512([raw_data bytes], [raw_data length], hash);
-
-    NSData *result = [NSData dataWithBytes:hash length:SHA3_512_DIGEST_LENGTH];
-    free(hash);
-    resolve([result base64EncodedStringWithOptions:0]);
-  });
-}
-
-RCT_REMAP_METHOD(ripemd160,
-                 withDataForRipemd160:(NSString *)data
-                 withResolver:(RCTPromiseResolveBlock)resolve
-                 withRejecter:(RCTPromiseRejectBlock)reject)
-{
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
-    uint8_t *hash = (uint8_t *) malloc(RIPEMD160_DIGEST_LENGTH);
-
-    ripemd160([raw_data bytes], [raw_data length], hash);
-
-    NSData *result = [NSData dataWithBytes:hash length:RIPEMD160_DIGEST_LENGTH];
-    free(hash);
+    free(hmac);
     resolve([result base64EncodedStringWithOptions:0]);
   });
 }

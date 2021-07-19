@@ -1,17 +1,27 @@
 import { NativeModules } from 'react-native';
 import { Buffer } from 'buffer';
 
+export enum HMAC {
+  SHA256 = 0,
+  SHA512 = 1,
+}
+
+export enum HASH {
+  SHA1 = 0,
+  SHA256 = 1,
+  SHA512 = 2,
+  SHA3_256 = 3,
+  SHA3_512 = 4,
+  KECCAK_256 = 5,
+  KECCAK_512 = 6,
+  RIPEMD160 = 7,
+}
+
 type CryptoLibType = {
   randomNumber(): Promise<number>;
   randomBytes(length: number): Promise<Buffer>;
-  sha1(data: Buffer): Promise<Buffer>;
-  sha256(data: Buffer): Promise<Buffer>;
-  sha512(data: Buffer): Promise<Buffer>;
-  sha3_256(data: Buffer): Promise<Buffer>;
-  sha3_512(data: Buffer): Promise<Buffer>;
-  keccak_256(data: Buffer): Promise<Buffer>;
-  keccak_512(data: Buffer): Promise<Buffer>;
-  ripemd160(data: Buffer): Promise<Buffer>;
+  hash(type: HASH, data: Buffer): Promise<Buffer>;
+  hmac(type: HMAC, key: Buffer, data: Buffer): Promise<Buffer>;
 };
 
 const { CryptoLib } = NativeModules;
@@ -23,47 +33,19 @@ const CryptoLibJs = {
       return Buffer.from(bytes, 'base64');
     });
   },
-  sha1: (data: Buffer) => {
-    return CryptoLib.sha1(data.toString('base64')).then((hash: string) => {
-      return Buffer.from(hash, 'base64');
-    });
-  },
-  sha256: (data: Buffer) => {
-    return CryptoLib.sha256(data.toString('base64')).then((hash: string) => {
-      return Buffer.from(hash, 'base64');
-    });
-  },
-  sha512: (data: Buffer) => {
-    return CryptoLib.sha512(data.toString('base64')).then((hash: string) => {
-      return Buffer.from(hash, 'base64');
-    });
-  },
-  sha3_256: (data: Buffer) => {
-    return CryptoLib.sha3_256(data.toString('base64')).then((hash: string) => {
-      return Buffer.from(hash, 'base64');
-    });
-  },
-  sha3_512: (data: Buffer) => {
-    return CryptoLib.sha3_512(data.toString('base64')).then((hash: string) => {
-      return Buffer.from(hash, 'base64');
-    });
-  },
-  keccak_256: (data: Buffer) => {
-    return CryptoLib.keccak_256(data.toString('base64')).then(
+  hash: (type: HASH, data: Buffer) => {
+    return CryptoLib.hash(type, data.toString('base64')).then(
       (hash: string) => {
         return Buffer.from(hash, 'base64');
       }
     );
   },
-  keccak_512: (data: Buffer) => {
-    return CryptoLib.keccak_512(data.toString('base64')).then(
-      (hash: string) => {
-        return Buffer.from(hash, 'base64');
-      }
-    );
-  },
-  ripemd160: (data: Buffer) => {
-    return CryptoLib.ripemd160(data.toString('base64')).then((hash: string) => {
+  hmac: (type: HMAC, key: Buffer, data: Buffer) => {
+    return CryptoLib.hmac(
+      type,
+      key.toString('base64'),
+      data.toString('base64')
+    ).then((hash: string) => {
       return Buffer.from(hash, 'base64');
     });
   },

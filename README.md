@@ -11,27 +11,35 @@ npm install react-native-crypto-lib
 ## Usage
 
 ```js
-import CryptoLib from 'react-native-crypto-lib';
+import CryptoLib, { HASH, HMAC } from 'react-native-crypto-lib';
 import { Buffer } from 'buffer';
 
 // ...
+
+const data = Buffer.from('Hello World', 'hex');
 
 const random_uint32 = await CryptoLib.randomNumber();
 const random_buffer = await CryptoLib.randomBytes(32);
 
 // sha2
-const sha1_buffer = await CryptoLib.sha1(Buffer.from('Hello World'));
-const sha256_buffer = await CryptoLib.sha256(Buffer.from('Hello World'));
-const sha512_buffer = await CryptoLib.sha512(Buffer.from('Hello World'));
+const sha1_buffer = await CryptoLib.hash(HASH.SHA1, data);
+const sha256_buffer = await CryptoLib.hash(HASH.SHA256, data);
+const sha512_buffer = await CryptoLib.hash(HASH.SHA512, data);
 
 // sha3
-const sha3_256_buffer = await CryptoLib.sha3_256(Buffer.from('Hello World'));
-const sha3_512_buffer = await CryptoLib.sha3_512(Buffer.from('Hello World'));
-const keccak_256_buffer = await CryptoLib.keccak_256(Buffer.from('Hello World'));
-const keccak_512_buffer = await CryptoLib.keccak_512(Buffer.from('Hello World'));
+const sha3_256_buffer = await CryptoLib.hash(HASH.SHA3_256, data);
+const sha3_512_buffer = await CryptoLib.hash(HASH.SHA3_512, data);
+const keccak_256_buffer = await CryptoLib.hash(HASH.KECCAK_256, data);
+const keccak_512_buffer = await CryptoLib.hash(HASH.KECCAK_512, data);
 
 // ripemd160
-const ripemd160_buffer = await CryptoLib.ripemd160(Buffer.from('Hello World'));
+const ripemd160_buffer = await CryptoLib.hash(HASH.RIPEMD160, data);
+
+// HMAC
+const hmac_key = Buffer.from('0102030405060708', 'hex');
+
+const hmac256_buffer = await CryptoLib.hmac(HMAC.SHA256, hmac_key, data);
+const hmac512_buffer = await CryptoLib.hmac(HMAC.SHA512, hmac_key, data);
 ```
 
 ## Contributing
