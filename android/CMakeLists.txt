@@ -5,9 +5,14 @@ set (CMAKE_CXX_STANDARD 11)
 
 add_library(crypto
   SHARED
-    ../external/crypto/rand.c
+    ../external/crypto/bip39.c
+    ../external/crypto/hmac.c
     ../external/crypto/memzero.c
+    ../external/crypto/pbkdf2.c
+    ../external/crypto/rand.c
+    ../external/crypto/ripemd160.c
     ../external/crypto/sha2.c
+    ../external/crypto/sha3.c
     cpp-adapter.cpp
 )
 

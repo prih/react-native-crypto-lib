@@ -8,7 +8,7 @@ export default function App() {
   const [result, setResult] = React.useState<Buffer | undefined>();
 
   React.useEffect(() => {
-    CryptoLib.sha256(Buffer.from('Hello World')).then(setResult);
+    CryptoLib.keccak_512(Buffer.from('Hello World')).then(setResult);
   }, []);
 
   return (

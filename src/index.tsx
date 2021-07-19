@@ -7,6 +7,10 @@ type CryptoLibType = {
   sha1(data: Buffer): Promise<Buffer>;
   sha256(data: Buffer): Promise<Buffer>;
   sha512(data: Buffer): Promise<Buffer>;
+  sha3_256(data: Buffer): Promise<Buffer>;
+  sha3_512(data: Buffer): Promise<Buffer>;
+  keccak_256(data: Buffer): Promise<Buffer>;
+  keccak_512(data: Buffer): Promise<Buffer>;
 };
 
 const { CryptoLib } = NativeModules;
@@ -32,6 +36,30 @@ const CryptoLibJs = {
     return CryptoLib.sha512(data.toString('base64')).then((hash: string) => {
       return Buffer.from(hash, 'base64');
     });
+  },
+  sha3_256: (data: Buffer) => {
+    return CryptoLib.sha3_256(data.toString('base64')).then((hash: string) => {
+      return Buffer.from(hash, 'base64');
+    });
+  },
+  sha3_512: (data: Buffer) => {
+    return CryptoLib.sha3_512(data.toString('base64')).then((hash: string) => {
+      return Buffer.from(hash, 'base64');
+    });
+  },
+  keccak_256: (data: Buffer) => {
+    return CryptoLib.keccak_256(data.toString('base64')).then(
+      (hash: string) => {
+        return Buffer.from(hash, 'base64');
+      }
+    );
+  },
+  keccak_512: (data: Buffer) => {
+    return CryptoLib.keccak_512(data.toString('base64')).then(
+      (hash: string) => {
+        return Buffer.from(hash, 'base64');
+      }
+    );
   },
 };
 
