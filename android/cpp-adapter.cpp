@@ -4,6 +4,7 @@
 #include "rand.h"
 #include "sha2.h"
 #include "sha3.h"
+#include "ripemd160.h"
 
 extern "C"
 JNIEXPORT jint JNICALL
@@ -146,6 +147,24 @@ Java_com_reactnativecryptolib_CryptoLibModule_keccak_1512(JNIEnv *env, __attribu
   jbyteArray result;
   result = env->NewByteArray(SHA3_512_DIGEST_LENGTH);
   env->SetByteArrayRegion(result, 0, SHA3_512_DIGEST_LENGTH, hash);
+
+  free(hash);
+
+  return result;
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_ripemd160(JNIEnv *env, __attribute__((unused)) jclass type, jbyteArray data) {
+  jsize num_bytes = env->GetArrayLength(data);
+  jbyte *raw_data = env->GetByteArrayElements(data, 0);
+  jbyte *hash = (jbyte *) malloc(RIPEMD160_DIGEST_LENGTH);
+
+  ripemd160(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
+
+  jbyteArray result;
+  result = env->NewByteArray(RIPEMD160_DIGEST_LENGTH);
+  env->SetByteArrayRegion(result, 0, RIPEMD160_DIGEST_LENGTH, hash);
 
   free(hash);
 

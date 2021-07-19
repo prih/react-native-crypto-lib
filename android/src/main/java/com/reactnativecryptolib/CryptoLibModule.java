@@ -141,6 +141,18 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
       });
     }
 
+    @ReactMethod
+    public void ripemd160(final String data, Promise promise) {
+      AsyncTask.execute(new Runnable() {
+        @Override
+        public void run() {
+          byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
+          byte[] hash = ripemd160(bytes);
+          promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
+        }
+      });
+    }
+
     public static native int randomNumber();
     public static native byte[] randomBytes(int length);
     public static native byte[] sha1(byte[] data);
@@ -150,4 +162,5 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     public static native byte[] sha3_512(byte[] data);
     public static native byte[] keccak_256(byte[] data);
     public static native byte[] keccak_512(byte[] data);
+    public static native byte[] ripemd160(byte[] data);
 }

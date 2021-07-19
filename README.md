@@ -29,6 +29,9 @@ const sha3_256_buffer = await CryptoLib.sha3_256(Buffer.from('Hello World'));
 const sha3_512_buffer = await CryptoLib.sha3_512(Buffer.from('Hello World'));
 const keccak_256_buffer = await CryptoLib.keccak_256(Buffer.from('Hello World'));
 const keccak_512_buffer = await CryptoLib.keccak_512(Buffer.from('Hello World'));
+
+// ripemd160
+const ripemd160_buffer = await CryptoLib.ripemd160(Buffer.from('Hello World'));
 ```
 
 ## Contributing

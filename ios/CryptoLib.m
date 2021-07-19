@@ -4,6 +4,7 @@
 #import "rand.h"
 #import "sha2.h"
 #import "sha3.h"
+#import "ripemd160.h"
 
 @implementation CryptoLib
 
@@ -150,6 +151,23 @@ RCT_REMAP_METHOD(keccak_512,
     keccak_512([raw_data bytes], [raw_data length], hash);
 
     NSData *result = [NSData dataWithBytes:hash length:SHA3_512_DIGEST_LENGTH];
+    free(hash);
+    resolve([result base64EncodedStringWithOptions:0]);
+  });
+}
+
+RCT_REMAP_METHOD(ripemd160,
+                 withDataForRipemd160:(NSString *)data
+                 withResolver:(RCTPromiseResolveBlock)resolve
+                 withRejecter:(RCTPromiseRejectBlock)reject)
+{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
+    uint8_t *hash = (uint8_t *) malloc(RIPEMD160_DIGEST_LENGTH);
+
+    ripemd160([raw_data bytes], [raw_data length], hash);
+
+    NSData *result = [NSData dataWithBytes:hash length:RIPEMD160_DIGEST_LENGTH];
     free(hash);
     resolve([result base64EncodedStringWithOptions:0]);
   });
