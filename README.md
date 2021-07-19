@@ -12,12 +12,15 @@ npm install react-native-crypto-lib
 
 ```js
 import CryptoLib from "react-native-crypto-lib";
+import { Buffer } from 'buffer';
 
 // ...
 
 const random_uint32 = await CryptoLib.randomNumber();
 
 const random_buffer = await CryptoLib.randomBytes(32);
+
+const sha1_buffer = await CryptoLib.sha1(Buffer.from('Hello World'));
 ```
 
 ## Contributing
