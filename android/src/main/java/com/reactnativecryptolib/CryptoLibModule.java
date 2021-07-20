@@ -119,9 +119,55 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
       return Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
+    @ReactMethod
+    public void mnemonicToSeed(
+      final String mnemonic,
+      final String passphrase,
+      Promise promise
+    ) {
+      AsyncTask.execute(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            byte[] seed = mnemonicToSeedNative(mnemonic, passphrase);
+            promise.resolve(Base64.encodeToString(seed, Base64.NO_PADDING | Base64.NO_WRAP));
+          } catch (Exception ex) {
+            ex.printStackTrace();
+            promise.reject("Error", ex.toString());
+          }
+        }
+      });
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String mnemonicToSeedSync(
+      final String mnemonic,
+      final String passphrase
+    ) {
+      byte[] seed = mnemonicToSeedNative(mnemonic, passphrase);
+      return Base64.encodeToString(seed, Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String generateMnemonic(
+      final int strength
+    ) {
+      return generateMnemonicNative(strength);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public int validateMnemonic(
+      final String mnemonic
+    ) {
+      return validateMnemonicNative(mnemonic);
+    }
+
     public static native int randomNumberNative();
     public static native byte[] randomBytesNative(int length);
     public static native byte[] hashNative(int type, byte[] data);
     public static native byte[] hmacNative(int type, byte[] key, byte[] data);
     public static native byte[] pbkdf2Native(int type, byte[] pass, byte[] salt, int iterations, int keyLength);
+    public static native byte[] mnemonicToSeedNative(String mnemonic, String passphrase);
+    public static native String generateMnemonicNative(int strength);
+    public static native int validateMnemonicNative(String mnemonic);
 }

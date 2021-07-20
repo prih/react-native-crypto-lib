@@ -49,6 +49,12 @@ const pbkdf2_512_buffer = await CryptoLib.pbkdf2('password', 'salt', 10000, 32, 
 // pbkdf2Sync
 const pbkdf2_256_buffer = CryptoLib.pbkdf2Sync('password', 'salt', 10000, 32, HMAC.SHA256);
 const pbkdf2_512_buffer = CryptoLib.pbkdf2Sync('password', 'salt', 10000, 32, HMAC.SHA512);
+
+// BIP39
+const seed_buffer = await CryptoLib.mnemonicToSeed('words...', 'password (optionsl)');
+const seed_buffer = CryptoLib.mnemonicToSeedSync('words...', 'password (optionsl)');
+const mnemonic = CryptoLib.generateMnemonic(24);
+const is_valid_mnemonic = CryptoLib.validateMnemonic('words...');
 ```
 
 ## Contributing

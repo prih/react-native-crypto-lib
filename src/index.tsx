@@ -26,17 +26,21 @@ type CryptoLibType = {
   pbkdf2(
     pass: String | Buffer,
     salt: String | Buffer,
-    iterations: number,
-    keyLength: number,
-    digest: HMAC
+    iterations?: number,
+    keyLength?: number,
+    digest?: HMAC
   ): Promise<Buffer>;
   pbkdf2Sync(
     pass: String | Buffer,
     salt: String | Buffer,
-    iterations: number,
-    keyLength: number,
-    digest: HMAC
+    iterations?: number,
+    keyLength?: number,
+    digest?: HMAC
   ): Buffer;
+  mnemonicToSeed(mnemonic: string, passphrase?: string): Promise<Buffer>;
+  mnemonicToSeedSync(mnemonic: string, passphrase?: string): Buffer;
+  generateMnemonic(strength?: number): String;
+  validateMnemonic(mnemonic: string): Boolean;
 };
 
 const { CryptoLib } = NativeModules;
@@ -94,6 +98,25 @@ const CryptoLibJs = {
       ),
       'base64'
     );
+  },
+  mnemonicToSeed: (mnemonic: string, passphrase: string = '') => {
+    return CryptoLib.mnemonicToSeed(mnemonic, passphrase).then(
+      (result: string) => {
+        return Buffer.from(result, 'base64');
+      }
+    );
+  },
+  mnemonicToSeedSync: (mnemonic: string, passphrase: string = '') => {
+    return Buffer.from(
+      CryptoLib.mnemonicToSeedSync(mnemonic, passphrase),
+      'base64'
+    );
+  },
+  generateMnemonic: (strength: number = 12) => {
+    return CryptoLib.generateMnemonic(strength);
+  },
+  validateMnemonic: (mnemonic: string) => {
+    return CryptoLib.validateMnemonic(mnemonic) === 0 ? false : true;
   },
 };
 

@@ -7,6 +7,7 @@
 #import "ripemd160.h"
 #import "hmac.h"
 #import "pbkdf2.h"
+#import "bip39.h"
 
 @implementation CryptoLib
 
@@ -33,15 +34,20 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(randomNumber)
   return [NSNumber numberWithUnsignedInt:random32()];
 }
 
-RCT_EXPORT_METHOD(randomBytes:(int)length resolver:(RCTPromiseResolveBlock)resolve)
+RCT_EXPORT_METHOD(randomBytes:(int)length 
+  resolver:(RCTPromiseResolveBlock)resolve
+  rejecter:(RCTPromiseRejectBlock)reject
+)
 {
-  uint8_t *bytes = (uint8_t *) malloc(length);
-  random_buffer(bytes, length);
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    uint8_t *bytes = (uint8_t *) malloc(length);
+    random_buffer(bytes, length);
 
-  NSData *result = [NSData dataWithBytes:bytes length:length];
+    NSData *result = [NSData dataWithBytes:bytes length:length];
 
-  free(bytes);
-  resolve([result base64EncodedStringWithOptions:0]);
+    free(bytes);
+    resolve([result base64EncodedStringWithOptions:0]);
+  });
 }
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(randomBytesSync:(int)length)
@@ -156,40 +162,42 @@ RCT_EXPORT_METHOD(
   rejecter:(RCTPromiseRejectBlock)reject
 )
 {
-  NSData *raw_pass = [[NSData alloc]initWithBase64EncodedString:pass options:0];
-  NSData *raw_salt = [[NSData alloc]initWithBase64EncodedString:salt options:0];
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSData *raw_pass = [[NSData alloc]initWithBase64EncodedString:pass options:0];
+    NSData *raw_salt = [[NSData alloc]initWithBase64EncodedString:salt options:0];
 
-  uint8_t *hash;
-  NSData *result;
+    uint8_t *hash;
+    NSData *result;
 
-  switch(algorithm){
-    case HMAC_SHA256:
-      hash = (uint8_t *) malloc(keyLength);
-      pbkdf2_hmac_sha256(
-        [raw_pass bytes], [raw_pass length],
-        [raw_salt bytes], [raw_salt length],
-        iterations,
-        hash, keyLength
-      );
-      result = [NSData dataWithBytes:hash length:keyLength];
-      break;
-    case HMAC_SHA512:
-      hash = (uint8_t *) malloc(keyLength);
-      pbkdf2_hmac_sha512(
-        [raw_pass bytes], [raw_pass length],
-        [raw_salt bytes], [raw_salt length],
-        iterations,
-        hash, keyLength
-      );
-      result = [NSData dataWithBytes:hash length:keyLength];
-      break;
-    default:
-      reject(@"Error", @"unknown hash type", nil);
-      return;
-  }
+    switch(algorithm){
+      case HMAC_SHA256:
+        hash = (uint8_t *) malloc(keyLength);
+        pbkdf2_hmac_sha256(
+          [raw_pass bytes], [raw_pass length],
+          [raw_salt bytes], [raw_salt length],
+          iterations,
+          hash, keyLength
+        );
+        result = [NSData dataWithBytes:hash length:keyLength];
+        break;
+      case HMAC_SHA512:
+        hash = (uint8_t *) malloc(keyLength);
+        pbkdf2_hmac_sha512(
+          [raw_pass bytes], [raw_pass length],
+          [raw_salt bytes], [raw_salt length],
+          iterations,
+          hash, keyLength
+        );
+        result = [NSData dataWithBytes:hash length:keyLength];
+        break;
+      default:
+        reject(@"Error", @"unknown hash type", nil);
+        return;
+    }
 
-  free(hash);
-  resolve([result base64EncodedStringWithOptions:0]);
+    free(hash);
+    resolve([result base64EncodedStringWithOptions:0]);
+  });
 }
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
@@ -233,6 +241,51 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 
   free(hash);
   return [result base64EncodedStringWithOptions:0];
+}
+
+RCT_EXPORT_METHOD(mnemonicToSeed:(NSString *)mnemonic
+  withPassphrase:(NSString *)passphrase
+  resolver:(RCTPromiseResolveBlock)resolve
+  rejecter:(RCTPromiseRejectBlock)reject
+)
+{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    uint8_t *seed = (uint8_t *) malloc(SHA512_DIGEST_LENGTH);
+    mnemonic_to_seed([mnemonic UTF8String], [passphrase UTF8String], seed, 0);
+    NSData *result = [NSData dataWithBytes:seed length:SHA512_DIGEST_LENGTH];
+    free(seed);
+
+    resolve([result base64EncodedStringWithOptions:0]);
+  });
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  mnemonicToSeedSync:(NSString *)mnemonic
+  withPassphrase:(NSString *)passphrase
+)
+{
+  uint8_t *seed = (uint8_t *) malloc(SHA512_DIGEST_LENGTH);
+  mnemonic_to_seed([mnemonic UTF8String], [passphrase UTF8String], seed, 0);
+  NSData *result = [NSData dataWithBytes:seed length:SHA512_DIGEST_LENGTH];
+  free(seed);
+
+  return [result base64EncodedStringWithOptions:0];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  generateMnemonic:(int)strength
+)
+{
+  char *mnemonic = mnemonic_generate(strength);
+  return [NSString stringWithUTF8String:mnemonic];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  validateMnemonic:(NSString *)mnemonic
+)
+{
+  int result = mnemonic_check([mnemonic UTF8String]);
+  return [NSNumber numberWithInt: result];
 }
 
 @end

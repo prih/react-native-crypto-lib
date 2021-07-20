@@ -1,9 +1,9 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
-import CryptoLib, { HMAC } from 'react-native-crypto-lib';
-// import { Buffer } from 'buffer';
-import crypto from 'crypto';
+import CryptoLib from 'react-native-crypto-lib';
+// import crypto from 'crypto';
+import * as bip39 from 'bip39';
 
 async function test1() {
   console.log('TEST1 start');
@@ -13,12 +13,16 @@ async function test1() {
 
   const t_start = new Date();
   for (let i = 0; i < 1; i++) {
-    await CryptoLib.pbkdf2(
-      'Fg987h7fGjh9d7',
-      'hmn9k8h9j8',
-      100000,
-      32,
-      HMAC.SHA256
+    // await CryptoLib.pbkdf2(
+    //   'Fg987h7fGjh9d7',
+    //   'hmn9k8h9j8',
+    //   100000,
+    //   32,
+    //   HMAC.SHA256
+    // );
+
+    await CryptoLib.mnemonicToSeed(
+      'resist unaware absent jazz pride will swift cigar soup journey doll come'
     );
   }
   const t_end = new Date();
@@ -34,7 +38,10 @@ async function test2() {
 
   const t_start = new Date();
   for (let i = 0; i < 1; i++) {
-    crypto.pbkdf2Sync('Fg987h7fGjh9d7', 'hmn9k8h9j8', 100000, 32, 'sha256');
+    // crypto.pbkdf2Sync('Fg987h7fGjh9d7', 'hmn9k8h9j8', 100000, 32, 'sha256');
+    await bip39.mnemonicToSeed(
+      'resist unaware absent jazz pride will swift cigar soup journey doll come'
+    );
   }
   const t_end = new Date();
 

@@ -8,6 +8,7 @@
 #include "ripemd160.h"
 #include "hmac.h"
 #include "pbkdf2.h"
+#include "bip39.h"
 
 enum HASH_TYPE {
   SHA1,
@@ -214,4 +215,45 @@ Java_com_reactnativecryptolib_CryptoLibModule_pbkdf2Native(
 
   free(hash);
   return result;
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_mnemonicToSeedNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jstring mnemonic,
+  const jstring passphrase
+) {
+  const char *raw_mnemonic = env->GetStringUTFChars(mnemonic, 0);
+  const char *raw_passphrase = env->GetStringUTFChars(passphrase, 0);
+  jbyte *seed = (jbyte *) malloc(SHA512_DIGEST_LENGTH);
+
+  mnemonic_to_seed(raw_mnemonic, raw_passphrase, reinterpret_cast<uint8_t *>(seed), 0);
+
+  jbyteArray result = env->NewByteArray(SHA512_DIGEST_LENGTH);
+  env->SetByteArrayRegion(result, 0, SHA512_DIGEST_LENGTH, seed);
+  free(seed);
+
+  return result;
+}
+
+extern "C"
+JNIEXPORT jstring JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_generateMnemonicNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jint strength
+) {
+  return env->NewStringUTF(mnemonic_generate((int)strength));
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_validateMnemonicNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jstring mnemonic
+) {
+  return (jint) mnemonic_check(env->GetStringUTFChars(mnemonic, (jboolean *)false));
 }
