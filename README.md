@@ -1,6 +1,6 @@
 # react-native-crypto-lib
 
-crypto lib
+crypto lib based on [trezor-firmware](https://github.com/trezor/trezor-firmware/tree/master/crypto).
 
 ## Installation
 
