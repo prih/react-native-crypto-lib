@@ -6,6 +6,7 @@
 #import "sha3.h"
 #import "ripemd160.h"
 #import "hmac.h"
+#import "pbkdf2.h"
 
 @implementation CryptoLib
 
@@ -32,7 +33,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(randomNumber)
   return [NSNumber numberWithUnsignedInt:random32()];
 }
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(randomBytes:(int)length)
+RCT_EXPORT_METHOD(randomBytes:(int)length resolver:(RCTPromiseResolveBlock)resolve)
 {
   uint8_t *bytes = (uint8_t *) malloc(length);
   random_buffer(bytes, length);
@@ -40,7 +41,17 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(randomBytes:(int)length)
   NSData *result = [NSData dataWithBytes:bytes length:length];
 
   free(bytes);
+  resolve([result base64EncodedStringWithOptions:0]);
+}
 
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(randomBytesSync:(int)length)
+{
+  uint8_t *bytes = (uint8_t *) malloc(length);
+  random_buffer(bytes, length);
+
+  NSData *result = [NSData dataWithBytes:bytes length:length];
+
+  free(bytes);
   return [result base64EncodedStringWithOptions:0];
 }
 
@@ -132,6 +143,95 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   }
 
   free(hmac);
+  return [result base64EncodedStringWithOptions:0];
+}
+
+RCT_EXPORT_METHOD(
+  pbkdf2:(int)algorithm
+  withPass:(NSString *)pass
+  withSalt:(NSString *)salt
+  withIterations:(int)iterations
+  withKeyLength:(int)keyLength
+  resolver:(RCTPromiseResolveBlock)resolve
+  rejecter:(RCTPromiseRejectBlock)reject
+)
+{
+  NSData *raw_pass = [[NSData alloc]initWithBase64EncodedString:pass options:0];
+  NSData *raw_salt = [[NSData alloc]initWithBase64EncodedString:salt options:0];
+
+  uint8_t *hash;
+  NSData *result;
+
+  switch(algorithm){
+    case HMAC_SHA256:
+      hash = (uint8_t *) malloc(keyLength);
+      pbkdf2_hmac_sha256(
+        [raw_pass bytes], [raw_pass length],
+        [raw_salt bytes], [raw_salt length],
+        iterations,
+        hash, keyLength
+      );
+      result = [NSData dataWithBytes:hash length:keyLength];
+      break;
+    case HMAC_SHA512:
+      hash = (uint8_t *) malloc(keyLength);
+      pbkdf2_hmac_sha512(
+        [raw_pass bytes], [raw_pass length],
+        [raw_salt bytes], [raw_salt length],
+        iterations,
+        hash, keyLength
+      );
+      result = [NSData dataWithBytes:hash length:keyLength];
+      break;
+    default:
+      reject(@"Error", @"unknown hash type", nil);
+      return;
+  }
+
+  free(hash);
+  resolve([result base64EncodedStringWithOptions:0]);
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  pbkdf2Sync:(int)algorithm
+  withPass:(NSString *)pass
+  withSalt:(NSString *)salt
+  withIterations:(int)iterations
+  withKeyLength:(int)keyLength
+)
+{
+  NSData *raw_pass = [[NSData alloc]initWithBase64EncodedString:pass options:0];
+  NSData *raw_salt = [[NSData alloc]initWithBase64EncodedString:salt options:0];
+
+  uint8_t *hash;
+  NSData *result;
+
+  switch(algorithm){
+    case HMAC_SHA256:
+      hash = (uint8_t *) malloc(keyLength);
+      pbkdf2_hmac_sha256(
+        [raw_pass bytes], [raw_pass length],
+        [raw_salt bytes], [raw_salt length],
+        iterations,
+        hash, keyLength
+      );
+      result = [NSData dataWithBytes:hash length:keyLength];
+      break;
+    case HMAC_SHA512:
+      hash = (uint8_t *) malloc(keyLength);
+      pbkdf2_hmac_sha512(
+        [raw_pass bytes], [raw_pass length],
+        [raw_salt bytes], [raw_salt length],
+        iterations,
+        hash, keyLength
+      );
+      result = [NSData dataWithBytes:hash length:keyLength];
+      break;
+    default:
+      return nil;
+  }
+
+  free(hash);
   return [result base64EncodedStringWithOptions:0];
 }
 

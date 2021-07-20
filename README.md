@@ -19,7 +19,8 @@ import { Buffer } from 'buffer';
 const data = Buffer.from('Hello World', 'hex');
 
 const random_uint32 = CryptoLib.randomNumber();
-const random_buffer = CryptoLib.randomBytes(32);
+const random_buffer = await CryptoLib.randomBytes(32);
+const random_buffer = CryptoLib.randomBytesSync(32);
 
 // sha2
 const sha1_buffer = CryptoLib.hash(HASH.SHA1, data);
@@ -40,6 +41,14 @@ const hmac_key = Buffer.from('0102030405060708', 'hex');
 
 const hmac256_buffer = CryptoLib.hmac(HMAC.SHA256, hmac_key, data);
 const hmac512_buffer = CryptoLib.hmac(HMAC.SHA512, hmac_key, data);
+
+// pbkdf2
+const pbkdf2_256_buffer = await CryptoLib.pbkdf2('password', 'salt', 10000, 32, HMAC.SHA256);
+const pbkdf2_512_buffer = await CryptoLib.pbkdf2('password', 'salt', 10000, 32, HMAC.SHA512);
+
+// pbkdf2Sync
+const pbkdf2_256_buffer = CryptoLib.pbkdf2Sync('password', 'salt', 10000, 32, HMAC.SHA256);
+const pbkdf2_512_buffer = CryptoLib.pbkdf2Sync('password', 'salt', 10000, 32, HMAC.SHA512);
 ```
 
 ## Contributing

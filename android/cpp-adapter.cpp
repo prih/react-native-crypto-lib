@@ -7,6 +7,7 @@
 #include "sha3.h"
 #include "ripemd160.h"
 #include "hmac.h"
+#include "pbkdf2.h"
 
 enum HASH_TYPE {
   SHA1,
@@ -163,5 +164,54 @@ Java_com_reactnativecryptolib_CryptoLibModule_hmacNative(
 
   free(hash);
 
+  return result;
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_pbkdf2Native(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  jint algorithm,
+  jbyteArray pass,
+  jbyteArray salt,
+  jint iterations,
+  jint keyLength
+) {
+  jsize pass_length = env->GetArrayLength(pass);
+  jbyte *raw_pass = env->GetByteArrayElements(pass, (jboolean *)false);
+  jsize salt_length = env->GetArrayLength(salt);
+  jbyte *raw_salt = env->GetByteArrayElements(salt, (jboolean *)false);
+  
+  jbyte *hash = (jbyte *) malloc(keyLength);
+
+  switch (algorithm)
+  {
+    case HMAC_SHA256:
+      pbkdf2_hmac_sha256(
+        reinterpret_cast<uint8_t *>(raw_pass), pass_length,
+        reinterpret_cast<uint8_t *>(raw_salt), salt_length,
+        iterations,
+        reinterpret_cast<uint8_t *>(hash), keyLength
+      );
+      break;
+    case HMAC_SHA512:
+      pbkdf2_hmac_sha512(
+        reinterpret_cast<uint8_t *>(raw_pass), pass_length,
+        reinterpret_cast<uint8_t *>(raw_salt), salt_length,
+        iterations,
+        reinterpret_cast<uint8_t *>(hash), keyLength
+      );
+      break;
+    
+    default:
+      throw std::invalid_argument("unknown hash type");
+      break;
+  }
+  
+  jbyteArray result = env->NewByteArray(keyLength);
+  env->SetByteArrayRegion(result, 0, keyLength, hash);
+
+  free(hash);
   return result;
 }

@@ -19,9 +19,24 @@ export enum HASH {
 
 type CryptoLibType = {
   randomNumber(): number;
-  randomBytes(length: number): Buffer;
+  randomBytes(length: number): Promise<Buffer>;
+  randomBytesSync(length: number): Buffer;
   hash(type: HASH, data: Buffer): Buffer;
   hmac(type: HMAC, key: Buffer, data: Buffer): Buffer;
+  pbkdf2(
+    pass: String | Buffer,
+    salt: String | Buffer,
+    iterations: number,
+    keyLength: number,
+    digest: HMAC
+  ): Promise<Buffer>;
+  pbkdf2Sync(
+    pass: String | Buffer,
+    salt: String | Buffer,
+    iterations: number,
+    keyLength: number,
+    digest: HMAC
+  ): Buffer;
 };
 
 const { CryptoLib } = NativeModules;
@@ -29,6 +44,11 @@ const { CryptoLib } = NativeModules;
 const CryptoLibJs = {
   randomNumber: CryptoLib.randomNumber,
   randomBytes: (length: number) => {
+    return CryptoLib.randomBytes(length).then((bytes: string) => {
+      return Buffer.from(bytes, 'base64');
+    });
+  },
+  randomBytesSync: (length: number) => {
     return Buffer.from(CryptoLib.randomBytes(length), 'base64');
   },
   hash: (type: HASH, data: Buffer) => {
@@ -37,6 +57,41 @@ const CryptoLibJs = {
   hmac: (type: HMAC, key: Buffer, data: Buffer) => {
     return Buffer.from(
       CryptoLib.hmac(type, key.toString('base64'), data.toString('base64')),
+      'base64'
+    );
+  },
+  pbkdf2: (
+    pass: String | Buffer,
+    salt: String | Buffer,
+    iterations = 10000,
+    keyLength = 32,
+    digest = HMAC.SHA256
+  ) => {
+    return CryptoLib.pbkdf2(
+      digest,
+      Buffer.from(pass).toString('base64'),
+      Buffer.from(salt).toString('base64'),
+      iterations,
+      keyLength
+    ).then((hash: string) => {
+      return Buffer.from(hash, 'base64');
+    });
+  },
+  pbkdf2Sync: (
+    pass: String | Buffer,
+    salt: String | Buffer,
+    iterations = 10000,
+    keyLength = 32,
+    digest = HMAC.SHA256
+  ) => {
+    return Buffer.from(
+      CryptoLib.pbkdf2Sync(
+        digest,
+        Buffer.from(pass).toString('base64'),
+        Buffer.from(salt).toString('base64'),
+        iterations,
+        keyLength
+      ),
       'base64'
     );
   },

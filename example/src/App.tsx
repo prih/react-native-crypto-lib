@@ -8,12 +8,18 @@ import crypto from 'crypto';
 async function test1() {
   console.log('TEST1 start');
 
-  const key = await CryptoLib.randomBytes(64);
-  const data = await CryptoLib.randomBytes(256);
+  // const key = await CryptoLib.randomBytes(64);
+  // const data = await CryptoLib.randomBytes(256);
 
   const t_start = new Date();
-  for (let i = 0; i < 100000; i++) {
-    CryptoLib.hmac(HMAC.SHA512, key, data);
+  for (let i = 0; i < 1; i++) {
+    await CryptoLib.pbkdf2(
+      'Fg987h7fGjh9d7',
+      'hmn9k8h9j8',
+      100000,
+      32,
+      HMAC.SHA256
+    );
   }
   const t_end = new Date();
 
@@ -23,12 +29,12 @@ async function test1() {
 async function test2() {
   console.log('TEST2 start');
 
-  const key = await CryptoLib.randomBytes(64);
-  const data = await CryptoLib.randomBytes(256);
+  // const key = await CryptoLib.randomBytes(64);
+  // const data = await CryptoLib.randomBytes(256);
 
   const t_start = new Date();
-  for (let i = 0; i < 100000; i++) {
-    crypto.createHmac('sha512', key).update(data).digest();
+  for (let i = 0; i < 1; i++) {
+    crypto.pbkdf2Sync('Fg987h7fGjh9d7', 'hmn9k8h9j8', 100000, 32, 'sha256');
   }
   const t_end = new Date();
 

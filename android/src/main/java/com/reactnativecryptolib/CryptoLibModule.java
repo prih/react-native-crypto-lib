@@ -1,10 +1,12 @@
 package com.reactnativecryptolib;
 
+import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -33,14 +35,30 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
         return NAME;
     }
 
-
     @ReactMethod(isBlockingSynchronousMethod = true)
     public int randomNumber() {
       return randomNumberNative();
     }
 
+    @ReactMethod
+    public void randomBytes(int length, Promise promise) {
+      AsyncTask.execute(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            byte[] bytes = randomBytesNative(length);
+
+            promise.resolve(Base64.encodeToString(bytes, Base64.NO_PADDING | Base64.NO_WRAP));
+          } catch (Exception ex) {
+            ex.printStackTrace();
+            promise.reject("Error", ex.toString());
+          }
+        }
+      });
+    }
+
     @ReactMethod(isBlockingSynchronousMethod = true)
-    public String randomBytes(int length) {
+    public String randomBytesSync(int length) {
       byte[] bytes = randomBytesNative(length);
       return Base64.encodeToString(bytes, Base64.NO_PADDING | Base64.NO_WRAP);
     }
@@ -60,8 +78,50 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
       return Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
+    @ReactMethod
+    public void pbkdf2(
+      final int type,
+      final String pass,
+      final String salt,
+      final int iterations,
+      final int keyLength,
+      Promise promise
+    ) {
+      AsyncTask.execute(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            byte[] raw_pass = Base64.decode(pass, Base64.NO_PADDING);
+            byte[] raw_salt = Base64.decode(salt, Base64.NO_PADDING);
+            byte[] hash = pbkdf2Native(type, raw_pass, raw_salt, iterations, keyLength);
+
+            promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
+          } catch (Exception ex) {
+            ex.printStackTrace();
+            promise.reject("Error", ex.toString());
+          }
+        }
+      });
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String pbkdf2Sync(
+      final int type,
+      final String pass,
+      final String salt,
+      final int iterations,
+      final int keyLength
+    ) {
+      byte[] raw_pass = Base64.decode(pass, Base64.NO_PADDING);
+      byte[] raw_salt = Base64.decode(salt, Base64.NO_PADDING);
+      byte[] hash = pbkdf2Native(type, raw_pass, raw_salt, iterations, keyLength);
+
+      return Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
     public static native int randomNumberNative();
     public static native byte[] randomBytesNative(int length);
     public static native byte[] hashNative(int type, byte[] data);
     public static native byte[] hmacNative(int type, byte[] key, byte[] data);
+    public static native byte[] pbkdf2Native(int type, byte[] pass, byte[] salt, int iterations, int keyLength);
 }
