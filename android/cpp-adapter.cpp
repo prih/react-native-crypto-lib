@@ -26,13 +26,13 @@ enum HMAC_TYPE {
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_randomNumber() {
+Java_com_reactnativecryptolib_CryptoLibModule_randomNumberNative() {
   return random32();
 }
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_randomBytes(JNIEnv *env, __attribute__((unused)) jclass type, jint length) {
+Java_com_reactnativecryptolib_CryptoLibModule_randomBytesNative(JNIEnv *env, __attribute__((unused)) jclass type, jint length) {
   jbyte *bytes = (jbyte *) malloc(length);
   random_buffer(reinterpret_cast<uint8_t *>(bytes), length);
 
@@ -47,7 +47,7 @@ Java_com_reactnativecryptolib_CryptoLibModule_randomBytes(JNIEnv *env, __attribu
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_hash(
+Java_com_reactnativecryptolib_CryptoLibModule_hashNative(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
   jint algorithm,
@@ -117,7 +117,7 @@ Java_com_reactnativecryptolib_CryptoLibModule_hash(
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_hmac(
+Java_com_reactnativecryptolib_CryptoLibModule_hmacNative(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
   jint algorithm,

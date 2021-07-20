@@ -1,12 +1,10 @@
 package com.reactnativecryptolib;
 
-import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
@@ -36,74 +34,34 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     }
 
 
-    @ReactMethod
-    public void randomNumber(Promise promise) {
-      AsyncTask.execute(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            promise.resolve(randomNumber());
-          } catch (Exception ex) {
-            ex.printStackTrace();
-            promise.reject("Error", ex.toString());
-          }
-        }
-      });
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public int randomNumber() {
+      return randomNumberNative();
     }
 
-    @ReactMethod
-    public void randomBytes(int length, Promise promise) {
-      AsyncTask.execute(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            byte[] bytes = randomBytes(length);
-            promise.resolve(Base64.encodeToString(bytes, Base64.NO_PADDING | Base64.NO_WRAP));
-          } catch (Exception ex) {
-            ex.printStackTrace();
-            promise.reject("Error", ex.toString());
-          }
-        }
-      });
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String randomBytes(int length) {
+      byte[] bytes = randomBytesNative(length);
+      return Base64.encodeToString(bytes, Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
-    @ReactMethod
-    public void hash(final int type, final String data, Promise promise) {
-      AsyncTask.execute(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
-            byte[] hash = hash(type, bytes);
-            promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
-          } catch (Exception ex) {
-            ex.printStackTrace();
-            promise.reject("Error", ex.toString());
-          }
-        }
-      });
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String hash(final int type, final String data) {
+      byte[] bytes = Base64.decode(data, Base64.NO_PADDING);
+      byte[] hash = hashNative(type, bytes);
+      return Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
-    @ReactMethod
-    public void hmac(final int type, final String key, final String data, Promise promise) {
-      AsyncTask.execute(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            byte[] raw_key = Base64.decode(key, Base64.NO_PADDING);
-            byte[] raw_data = Base64.decode(data, Base64.NO_PADDING);
-            byte[] hash = hmac(type, raw_key, raw_data);
-            promise.resolve(Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP));
-          } catch (Exception ex) {
-            ex.printStackTrace();
-            promise.reject("Error", ex.toString());
-          }
-        }
-      });
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String hmac(final int type, final String key, final String data) {
+      byte[] raw_key = Base64.decode(key, Base64.NO_PADDING);
+      byte[] raw_data = Base64.decode(data, Base64.NO_PADDING);
+      byte[] hash = hmacNative(type, raw_key, raw_data);
+      return Base64.encodeToString(hash, Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
-    public static native int randomNumber();
-    public static native byte[] randomBytes(int length);
-    public static native byte[] hash(int type, byte[] data);
-    public static native byte[] hmac(int type, byte[] key, byte[] data);
+    public static native int randomNumberNative();
+    public static native byte[] randomBytesNative(int length);
+    public static native byte[] hashNative(int type, byte[] data);
+    public static native byte[] hmacNative(int type, byte[] key, byte[] data);
 }

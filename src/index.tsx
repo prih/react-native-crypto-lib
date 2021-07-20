@@ -18,10 +18,10 @@ export enum HASH {
 }
 
 type CryptoLibType = {
-  randomNumber(): Promise<number>;
-  randomBytes(length: number): Promise<Buffer>;
-  hash(type: HASH, data: Buffer): Promise<Buffer>;
-  hmac(type: HMAC, key: Buffer, data: Buffer): Promise<Buffer>;
+  randomNumber(): number;
+  randomBytes(length: number): Buffer;
+  hash(type: HASH, data: Buffer): Buffer;
+  hmac(type: HMAC, key: Buffer, data: Buffer): Buffer;
 };
 
 const { CryptoLib } = NativeModules;
@@ -29,25 +29,16 @@ const { CryptoLib } = NativeModules;
 const CryptoLibJs = {
   randomNumber: CryptoLib.randomNumber,
   randomBytes: (length: number) => {
-    return CryptoLib.randomBytes(length).then((bytes: string) => {
-      return Buffer.from(bytes, 'base64');
-    });
+    return Buffer.from(CryptoLib.randomBytes(length), 'base64');
   },
   hash: (type: HASH, data: Buffer) => {
-    return CryptoLib.hash(type, data.toString('base64')).then(
-      (hash: string) => {
-        return Buffer.from(hash, 'base64');
-      }
-    );
+    return Buffer.from(CryptoLib.hash(type, data.toString('base64')), 'base64');
   },
   hmac: (type: HMAC, key: Buffer, data: Buffer) => {
-    return CryptoLib.hmac(
-      type,
-      key.toString('base64'),
-      data.toString('base64')
-    ).then((hash: string) => {
-      return Buffer.from(hash, 'base64');
-    });
+    return Buffer.from(
+      CryptoLib.hmac(type, key.toString('base64'), data.toString('base64')),
+      'base64'
+    );
   },
 };
 
