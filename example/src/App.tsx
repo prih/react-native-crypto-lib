@@ -4,7 +4,7 @@ import { StyleSheet, View, Text, Button } from 'react-native';
 import CryptoLib from 'react-native-crypto-lib';
 // import crypto from 'crypto';
 import * as bip39 from 'bip39';
-// import { Buffer } from 'buffer';
+import { Buffer } from 'buffer';
 
 async function test1() {
   console.log('TEST1 start');
@@ -71,6 +71,19 @@ export default function App() {
           const is_valid65 = CryptoLib.ecdsaValidatePublic(public65);
 
           console.log(is_valid_priv, is_valid33, is_valid65);
+
+          const pub_rec = CryptoLib.ecdsaRecover(
+            Buffer.from(
+              '320d39ee6258f6b912307994ba603b9522ead3af2790b0eed23e6cade7d86125099300e015a6acaff1a9dbd96d57a1892e47d76211d13e6f235fd1a26e3c5c09',
+              'hex'
+            ),
+            Buffer.from(
+              '423840043a1d6ec96381259c34b66cc98264b3ebe3b663c12a888705a588496e',
+              'hex'
+            ),
+            0
+          );
+          console.log(pub_rec.toString('hex'));
         }}
       />
       <Text>Result Native: {result_time1}</Text>

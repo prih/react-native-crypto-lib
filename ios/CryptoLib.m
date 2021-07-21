@@ -387,4 +387,34 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   return [result base64EncodedStringWithOptions:0];
 }
 
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  ecdsaRecover:(NSString *)sig
+  withDigest:(NSString *)digest
+  withRecid:(int)recid
+)
+{
+  NSData *raw_sig = [[NSData alloc]initWithBase64EncodedString:sig options:0];
+  NSData *raw_digest = [[NSData alloc]initWithBase64EncodedString:digest options:0];
+
+  if ([raw_sig length] != 64) {
+    @throw [NSException exceptionWithName:@"sigSizeError" reason:@"wrong sig size" userInfo:nil];
+  }
+
+  if ([raw_digest length] != 32) {
+    @throw [NSException exceptionWithName:@"digestSizeError" reason:@"wrong digest size" userInfo:nil];
+  }
+
+  uint8_t *pub = (uint8_t *) malloc(65);
+  int err = ecdsa_recover_pub_from_sig(&secp256k1, pub, [raw_sig bytes], [raw_digest bytes], recid);
+
+  if (err > 0) {
+    @throw [NSException exceptionWithName:@"recoverError" reason:@"recover error" userInfo:nil];
+  }
+
+  NSData *result = [NSData dataWithBytes:pub length:65];
+  
+  free(pub);
+  return [result base64EncodedStringWithOptions:0];
+}
+
 @end

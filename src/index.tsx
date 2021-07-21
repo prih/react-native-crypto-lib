@@ -45,6 +45,7 @@ type CryptoLibType = {
   ecdsaValidatePublic(pub: Buffer): Boolean;
   ecdsaValidatePrivate(priv: Buffer): Boolean;
   ecdsaGetPublic(priv: Buffer, compress?: Boolean): Buffer;
+  ecdsaRecover(sig: Buffer, digest: Buffer, recid: number): Buffer;
 };
 
 const { CryptoLib } = NativeModules;
@@ -148,6 +149,19 @@ const CryptoLibJs = {
 
     if (!result) {
       throw new Error('wrong key');
+    }
+
+    return Buffer.from(result, 'base64');
+  },
+  ecdsaRecover: (sig: Buffer, digest: Buffer, recid: number) => {
+    const result = CryptoLib.ecdsaRecover(
+      sig.toString('base64'),
+      digest.toString('base64'),
+      recid
+    );
+
+    if (!result) {
+      throw new Error('recover error');
     }
 
     return Buffer.from(result, 'base64');
