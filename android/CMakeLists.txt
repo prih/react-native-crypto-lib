@@ -3,17 +3,18 @@ cmake_minimum_required(VERSION 3.0.0)
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 11)
 
+file(GLOB_RECURSE lib_sources RELATIVE ${CMAKE_SOURCE_DIR}
+  ../external/crypto/*.c
+)
+
 add_library(crypto
   SHARED
-    ../external/crypto/bip39.c
-    ../external/crypto/hmac.c
-    ../external/crypto/memzero.c
-    ../external/crypto/pbkdf2.c
-    ../external/crypto/rand.c
-    ../external/crypto/ripemd160.c
-    ../external/crypto/sha2.c
-    ../external/crypto/sha3.c
+    ${lib_sources}
     cpp-adapter.cpp
+)
+
+include_directories(
+  ../external/crypto
 )
 
 target_compile_options(crypto
@@ -37,8 +38,4 @@ target_compile_options(crypto
     -Wformat-security
     -Wno-missing-braces
     -Werror
-)
-
-include_directories(
-  ../external/crypto
 )

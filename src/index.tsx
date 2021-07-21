@@ -41,6 +41,9 @@ type CryptoLibType = {
   mnemonicToSeedSync(mnemonic: string, passphrase?: string): Buffer;
   generateMnemonic(strength?: number): String;
   validateMnemonic(mnemonic: string): Boolean;
+  ecdsaValidatePublic(pub: Buffer): Boolean;
+  ecdsaValidatePrivate(priv: Buffer): Boolean;
+  ecdsaGetPublic(priv: Buffer, compress?: Boolean): Buffer;
 };
 
 const { CryptoLib } = NativeModules;
@@ -116,7 +119,28 @@ const CryptoLibJs = {
     return CryptoLib.generateMnemonic(strength);
   },
   validateMnemonic: (mnemonic: string) => {
-    return CryptoLib.validateMnemonic(mnemonic) === 0 ? false : true;
+    return CryptoLib.validateMnemonic(mnemonic) === 1;
+  },
+  ecdsaValidatePublic: (pub: Buffer) => {
+    return CryptoLib.ecdsaValidatePublic(pub.toString('base64')) === 1;
+  },
+  ecdsaValidatePrivate: (priv: Buffer) => {
+    const result = CryptoLib.ecdsaValidatePrivate(priv.toString('base64'));
+    return result === 1;
+  },
+  ecdsaGetPublic: (priv: Buffer, compress: Boolean = true) => {
+    let result = null;
+    if (compress) {
+      result = CryptoLib.ecdsaGetPublic33(priv.toString('base64'));
+    } else {
+      result = CryptoLib.ecdsaGetPublic65(priv.toString('base64'));
+    }
+
+    if (!result) {
+      throw new Error('wrong key');
+    }
+
+    return Buffer.from(result, 'base64');
   },
 };
 

@@ -8,6 +8,9 @@
 #import "hmac.h"
 #import "pbkdf2.h"
 #import "bip39.h"
+#import "ecdsa.h"
+#import "secp256k1.h"
+#import "bignum.h"
 
 @implementation CryptoLib
 
@@ -109,7 +112,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
       break;
     case RIPEMD160:
       hash = (uint8_t *) malloc(RIPEMD160_DIGEST_LENGTH);
-      ripemd160([raw_data bytes], [raw_data length], hash);
+      ripemd160([raw_data bytes], (uint32_t)[raw_data length], hash);
       result = [NSData dataWithBytes:hash length:RIPEMD160_DIGEST_LENGTH];
       break;
     
@@ -136,12 +139,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   switch(algorithm){
     case HMAC_SHA256:
       hmac = (uint8_t *) malloc(SHA256_DIGEST_LENGTH);
-      hmac_sha256([raw_key bytes], [raw_key length], [raw_data bytes], [raw_data length], hmac);
+      hmac_sha256([raw_key bytes], (uint32_t)[raw_key length], [raw_data bytes], (uint32_t)[raw_data length], hmac);
       result = [NSData dataWithBytes:hmac length:SHA256_DIGEST_LENGTH];
       break;
     case HMAC_SHA512:
       hmac = (uint8_t *) malloc(SHA512_DIGEST_LENGTH);
-      hmac_sha512([raw_key bytes], [raw_key length], [raw_data bytes], [raw_data length], hmac);
+      hmac_sha512([raw_key bytes], (uint32_t)[raw_key length], [raw_data bytes], (uint32_t)[raw_data length], hmac);
       result = [NSData dataWithBytes:hmac length:SHA512_DIGEST_LENGTH];
       break;
     default:
@@ -173,8 +176,8 @@ RCT_EXPORT_METHOD(
       case HMAC_SHA256:
         hash = (uint8_t *) malloc(keyLength);
         pbkdf2_hmac_sha256(
-          [raw_pass bytes], [raw_pass length],
-          [raw_salt bytes], [raw_salt length],
+          [raw_pass bytes], (uint32_t)[raw_pass length],
+          [raw_salt bytes], (uint32_t)[raw_salt length],
           iterations,
           hash, keyLength
         );
@@ -183,8 +186,8 @@ RCT_EXPORT_METHOD(
       case HMAC_SHA512:
         hash = (uint8_t *) malloc(keyLength);
         pbkdf2_hmac_sha512(
-          [raw_pass bytes], [raw_pass length],
-          [raw_salt bytes], [raw_salt length],
+          [raw_pass bytes], (uint32_t)[raw_pass length],
+          [raw_salt bytes], (uint32_t)[raw_salt length],
           iterations,
           hash, keyLength
         );
@@ -218,8 +221,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
     case HMAC_SHA256:
       hash = (uint8_t *) malloc(keyLength);
       pbkdf2_hmac_sha256(
-        [raw_pass bytes], [raw_pass length],
-        [raw_salt bytes], [raw_salt length],
+        [raw_pass bytes], (uint32_t)[raw_pass length],
+        [raw_salt bytes], (uint32_t)[raw_salt length],
         iterations,
         hash, keyLength
       );
@@ -228,8 +231,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
     case HMAC_SHA512:
       hash = (uint8_t *) malloc(keyLength);
       pbkdf2_hmac_sha512(
-        [raw_pass bytes], [raw_pass length],
-        [raw_salt bytes], [raw_salt length],
+        [raw_pass bytes], (uint32_t)[raw_pass length],
+        [raw_salt bytes], (uint32_t)[raw_salt length],
         iterations,
         hash, keyLength
       );
@@ -276,7 +279,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   generateMnemonic:(int)strength
 )
 {
-  char *mnemonic = mnemonic_generate(strength);
+  const char *mnemonic = mnemonic_generate((uint32_t)strength);
   return [NSString stringWithUTF8String:mnemonic];
 }
 
@@ -286,6 +289,80 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 {
   int result = mnemonic_check([mnemonic UTF8String]);
   return [NSNumber numberWithInt: result];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  ecdsaValidatePublic:(NSString *)pub
+)
+{
+  NSData *raw_pub = [[NSData alloc]initWithBase64EncodedString:pub options:0];
+  curve_point pub_point = {0};
+
+  uint32_t pub_length = (uint32_t)[raw_pub length];
+  if (pub_length != 33 && pub_length != 65) {
+    return [NSNumber numberWithInt: 0];
+  }
+
+  int result = ecdsa_read_pubkey(&secp256k1, [raw_pub bytes], &pub_point);
+  return [NSNumber numberWithInt: result];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  ecdsaValidatePrivate:(NSString *)priv
+)
+{
+  NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
+
+  if ([raw_priv length] != 32) {
+    return [NSNumber numberWithInt: 0];
+  }
+
+  bignum256 p = {0};
+  bn_read_be([raw_priv bytes], &p);
+
+  if (bn_is_zero(&p) || (!bn_is_less(&p, &secp256k1.order))) {
+    return [NSNumber numberWithInt: 0];
+  }
+  
+  return [NSNumber numberWithInt: 1];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  ecdsaGetPublic33:(NSString *)priv
+)
+{
+  uint8_t pub_size = 33;
+  NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
+
+  if ([raw_priv length] != 32) {
+    @throw [NSException exceptionWithName:@"keySizeError" reason:@"wrong key size" userInfo:nil];
+  }
+
+  uint8_t *pub = (uint8_t *) malloc(pub_size);
+  ecdsa_get_public_key33(&secp256k1, [raw_priv bytes], pub);
+
+  NSData *result = [NSData dataWithBytes:pub length:pub_size];
+  
+  return [result base64EncodedStringWithOptions:0];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  ecdsaGetPublic65:(NSString *)priv
+)
+{
+  uint8_t pub_size = 65;
+  NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
+
+  if ([raw_priv length] != 32) {
+    @throw [NSException exceptionWithName:@"keySizeError" reason:@"wrong key size" userInfo:nil];
+  }
+
+  uint8_t *pub = (uint8_t *) malloc(pub_size);
+  ecdsa_get_public_key65(&secp256k1, [raw_priv bytes], pub);
+
+  NSData *result = [NSData dataWithBytes:pub length:pub_size];
+  
+  return [result base64EncodedStringWithOptions:0];
 }
 
 @end

@@ -9,6 +9,9 @@
 #include "hmac.h"
 #include "pbkdf2.h"
 #include "bip39.h"
+#include "ecdsa.h"
+#include "secp256k1.h"
+#include "bignum.h"
 
 enum HASH_TYPE {
   SHA1,
@@ -256,4 +259,97 @@ Java_com_reactnativecryptolib_CryptoLibModule_validateMnemonicNative(
   const jstring mnemonic
 ) {
   return (jint) mnemonic_check(env->GetStringUTFChars(mnemonic, (jboolean *)false));
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_ecdsaValidatePublicNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jbyteArray pub
+) {
+  curve_point pub_point;
+
+  jsize pub_length = env->GetArrayLength(pub);
+  if (pub_length != 33 && pub_length != 65) {
+    return 0;
+  }
+
+  jbyte *raw_pub = env->GetByteArrayElements(pub, (jboolean *)false);
+
+  return ecdsa_read_pubkey(&secp256k1, (const uint8_t *)raw_pub, &pub_point);
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_ecdsaValidatePrivateNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jbyteArray priv
+) {
+  jsize key_length = env->GetArrayLength(priv);
+  if (key_length != 32) {
+    return 0;
+  }
+
+  jbyte *raw_priv = env->GetByteArrayElements(priv, (jboolean *)false);
+
+  bignum256 p;
+  bn_read_be((const uint8_t *)raw_priv, &p);
+
+  if (bn_is_zero(&p) || (!bn_is_less(&p, &secp256k1.order))) {
+    return 0;
+  }
+  
+  return 1;
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_ecdsaGetPublic33Native(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jbyteArray priv
+) {
+  uint8_t pub_size = 33;
+  jsize key_length = env->GetArrayLength(priv);
+  if (key_length != 32) {
+    return NULL;
+  }
+
+  jbyte *raw_priv = env->GetByteArrayElements(priv, (jboolean *)false);
+
+  uint8_t *pub = (uint8_t *) malloc(pub_size);
+  ecdsa_get_public_key33(&secp256k1, (const uint8_t *)raw_priv, pub);
+  
+  jbyteArray result = env->NewByteArray(pub_size);
+  env->SetByteArrayRegion(result, 0, pub_size, (const jbyte *)pub);
+  free(pub);
+
+  return result;
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_ecdsaGetPublic65Native(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jbyteArray priv
+) {
+  uint8_t pub_size = 65;
+  jsize key_length = env->GetArrayLength(priv);
+  if (key_length != 32) {
+    return NULL;
+  }
+
+  jbyte *raw_priv = env->GetByteArrayElements(priv, (jboolean *)false);
+
+  uint8_t *pub = (uint8_t *) malloc(pub_size);
+  ecdsa_get_public_key65(&secp256k1, (const uint8_t *)raw_priv, pub);
+  
+  jbyteArray result = env->NewByteArray(pub_size);
+  env->SetByteArrayRegion(result, 0, pub_size, (const jbyte *)pub);
+  free(pub);
+
+  return result;
 }

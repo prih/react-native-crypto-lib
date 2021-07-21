@@ -2,6 +2,8 @@
 extern "C" {
 #endif
 
+#include "options.h"
+
 /*
 	Timing safe memory compare
 */

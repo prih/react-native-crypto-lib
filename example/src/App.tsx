@@ -4,6 +4,7 @@ import { StyleSheet, View, Text, Button } from 'react-native';
 import CryptoLib from 'react-native-crypto-lib';
 // import crypto from 'crypto';
 import * as bip39 from 'bip39';
+import { Buffer } from 'buffer';
 
 async function test1() {
   console.log('TEST1 start');
@@ -59,9 +60,18 @@ export default function App() {
         onPress={async () => {
           const t1 = await test1();
           setResultTime1(t1);
-
           const t2 = await test2();
           setResultTime2(t2);
+
+          console.log(
+            CryptoLib.ecdsaGetPublic(
+              Buffer.from(
+                '03982ffb907473ae545fe21600e4369e262cb79e5d0b68f990be35f21e423c',
+                'hex'
+              ),
+              false
+            )
+          );
         }}
       />
       <Text>Result Native: {result_time1}</Text>

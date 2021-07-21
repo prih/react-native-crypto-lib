@@ -55,6 +55,12 @@ const seed_buffer = await CryptoLib.mnemonicToSeed('words...', 'password (option
 const seed_buffer = CryptoLib.mnemonicToSeedSync('words...', 'password (optional)');
 const mnemonic = CryptoLib.generateMnemonic(24);
 const is_valid_mnemonic = CryptoLib.validateMnemonic('words...');
+
+// ECDSA secp256k1
+const is_valid = CryptoLib.ecdsaValidatePublic(pub);
+const is_valid = CryptoLib.ecdsaValidatePrivate(priv);
+const public33 = CryptoLib.ecdsaGetPublic(priv);
+const public65 = CryptoLib.ecdsaGetPublic(priv, false);
 ```
 
 ## Contributing

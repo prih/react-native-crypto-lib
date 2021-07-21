@@ -162,6 +162,42 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
       return validateMnemonicNative(mnemonic);
     }
 
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public int ecdsaValidatePublic(
+      final String pub
+    ) {
+      return ecdsaValidatePublicNative(Base64.decode(pub, Base64.NO_PADDING));
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public int ecdsaValidatePrivate(
+      final String priv
+    ) {
+      return ecdsaValidatePrivateNative(Base64.decode(priv, Base64.NO_PADDING));
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String ecdsaGetPublic33(
+      final String priv
+    ) {
+      byte[] result = ecdsaGetPublic33Native(Base64.decode(priv, Base64.NO_PADDING));
+      if (result == null) {
+        return null;
+      }
+      return Base64.encodeToString(result, Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String ecdsaGetPublic65(
+      final String priv
+    ) {
+      byte[] result = ecdsaGetPublic65Native(Base64.decode(priv, Base64.NO_PADDING));
+      if (result == null) {
+        return null;
+      }
+      return Base64.encodeToString(result, Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
     public static native int randomNumberNative();
     public static native byte[] randomBytesNative(int length);
     public static native byte[] hashNative(int type, byte[] data);
@@ -170,4 +206,8 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     public static native byte[] mnemonicToSeedNative(String mnemonic, String passphrase);
     public static native String generateMnemonicNative(int strength);
     public static native int validateMnemonicNative(String mnemonic);
+    public static native int ecdsaValidatePublicNative(byte[] pub);
+    public static native int ecdsaValidatePrivateNative(byte[] priv);
+    public static native byte[] ecdsaGetPublic33Native(byte[] priv);
+    public static native byte[] ecdsaGetPublic65Native(byte[] priv);
 }
