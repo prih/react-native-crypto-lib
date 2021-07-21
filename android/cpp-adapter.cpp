@@ -262,6 +262,31 @@ Java_com_reactnativecryptolib_CryptoLibModule_validateMnemonicNative(
 }
 
 extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_ecdsaRandomPrivateNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type
+) {
+  uint8_t *priv = (uint8_t *) malloc(32);
+  bignum256 p;
+
+  while(true) {
+    random_buffer(priv, 32);
+    bn_read_be(priv, &p);
+
+    if (!bn_is_zero(&p) && bn_is_less(&p, &secp256k1.order)) {
+      break;
+    }
+  }
+  
+  jbyteArray result = env->NewByteArray(32);
+  env->SetByteArrayRegion(result, 0, 32, (const jbyte *)priv);
+  free(priv);
+
+  return result;
+}
+
+extern "C"
 JNIEXPORT jint JNICALL
 Java_com_reactnativecryptolib_CryptoLibModule_ecdsaValidatePublicNative(
   JNIEnv *env,

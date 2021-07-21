@@ -163,6 +163,15 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
+    public String ecdsaRandomPrivate() {
+      byte[] result = ecdsaRandomPrivateNative();
+      if (result == null) {
+        return null;
+      }
+      return Base64.encodeToString(result, Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
     public int ecdsaValidatePublic(
       final String pub
     ) {
@@ -206,6 +215,7 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     public static native byte[] mnemonicToSeedNative(String mnemonic, String passphrase);
     public static native String generateMnemonicNative(int strength);
     public static native int validateMnemonicNative(String mnemonic);
+    public static native byte[] ecdsaRandomPrivateNative();
     public static native int ecdsaValidatePublicNative(byte[] pub);
     public static native int ecdsaValidatePrivateNative(byte[] priv);
     public static native byte[] ecdsaGetPublic33Native(byte[] priv);

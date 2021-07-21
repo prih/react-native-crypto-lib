@@ -57,10 +57,12 @@ const mnemonic = CryptoLib.generateMnemonic(24);
 const is_valid_mnemonic = CryptoLib.validateMnemonic('words...');
 
 // ECDSA secp256k1
-const is_valid = CryptoLib.ecdsaValidatePublic(pub);
-const is_valid = CryptoLib.ecdsaValidatePrivate(priv);
+const priv = CryptoLib.ecdsaRandomPrivate();
+const is_valid_priv = CryptoLib.ecdsaValidatePrivate(priv);
 const public33 = CryptoLib.ecdsaGetPublic(priv);
 const public65 = CryptoLib.ecdsaGetPublic(priv, false);
+const is_valid33 = CryptoLib.ecdsaValidatePublic(public33);
+const is_valid65 = CryptoLib.ecdsaValidatePublic(public65);
 ```
 
 ## Contributing

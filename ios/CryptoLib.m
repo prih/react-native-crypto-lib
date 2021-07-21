@@ -291,6 +291,26 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   return [NSNumber numberWithInt: result];
 }
 
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(ecdsaRandomPrivate)
+{
+  uint8_t *priv = (uint8_t *) malloc(32);
+  bignum256 p = {0};
+
+  while(true) {
+    random_buffer(priv, 32);
+    bn_read_be(priv, &p);
+
+    if (!bn_is_zero(&p) && bn_is_less(&p, &secp256k1.order)) {
+      break;
+    }
+  }
+
+  NSData *result = [NSData dataWithBytes:priv length:32];
+  
+  free(priv);
+  return [result base64EncodedStringWithOptions:0];
+}
+
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   ecdsaValidatePublic:(NSString *)pub
 )
@@ -343,6 +363,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 
   NSData *result = [NSData dataWithBytes:pub length:pub_size];
   
+  free(pub);
   return [result base64EncodedStringWithOptions:0];
 }
 
@@ -362,6 +383,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 
   NSData *result = [NSData dataWithBytes:pub length:pub_size];
   
+  free(pub);
   return [result base64EncodedStringWithOptions:0];
 }
 
