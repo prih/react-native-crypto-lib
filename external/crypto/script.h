@@ -20,6 +20,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __SCRIPT_H__
 #define __SCRIPT_H__
 
@@ -28,4 +32,8 @@
 int script_output_to_address(const uint8_t *script, int scriptlen, char *addr,
                              int addrsize);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

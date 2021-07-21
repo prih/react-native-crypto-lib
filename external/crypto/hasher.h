@@ -20,6 +20,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __HASHER_H__
 #define __HASHER_H__
 
@@ -79,4 +83,8 @@ void hasher_Final(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]);
 void hasher_Raw(HasherType type, const uint8_t *data, size_t length,
                 uint8_t hash[HASHER_DIGEST_LENGTH]);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

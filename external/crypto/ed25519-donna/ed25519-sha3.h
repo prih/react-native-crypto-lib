@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ED25519_SHA3_H
 #define ED25519_SHA3_H
 
@@ -19,3 +23,7 @@ int ed25519_scalarmult_sha3(ed25519_public_key res, const ed25519_secret_key sk,
 #endif
 
 #endif // ED25519_SHA3_H
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

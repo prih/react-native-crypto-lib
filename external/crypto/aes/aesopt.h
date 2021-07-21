@@ -84,6 +84,10 @@ Issue Date: 20/12/2007
           AES_RETURN decrypt(const unsigned char *in, unsigned char *out) const
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if !defined( _AESOPT_H )
 #define _AESOPT_H
 
@@ -781,4 +785,8 @@ Issue Date: 20/12/2007
 #  define ISB_SET
 #endif
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

@@ -21,6 +21,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __ECDSA_H__
 #define __ECDSA_H__
 
@@ -125,4 +129,8 @@ int ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key,
 int ecdsa_sig_to_der(const uint8_t *sig, uint8_t *der);
 int ecdsa_sig_from_der(const uint8_t *der, size_t der_len, uint8_t sig[64]);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

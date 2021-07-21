@@ -2,6 +2,10 @@
 
 /* *** Normally, it should not be necessary to edit this file. *** */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ECRYPT_CONFIG
 #define ECRYPT_CONFIG
 
@@ -313,4 +317,8 @@
 
 /* ------------------------------------------------------------------------- */
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

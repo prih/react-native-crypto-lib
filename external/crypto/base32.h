@@ -20,6 +20,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __BASE32_H__
 #define __BASE32_H__
 
@@ -41,4 +45,8 @@ bool base32_decode_unsafe(const uint8_t *in, size_t inlen, uint8_t *out,
 size_t base32_encoded_length(size_t inlen);
 size_t base32_decoded_length(size_t inlen);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

@@ -17,6 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __CHACHA_DRBG__
 #define __CHACHA_DRBG__
 
@@ -52,3 +56,7 @@ void chacha_drbg_reseed(CHACHA_DRBG_CTX *ctx, const uint8_t *entropy,
                         size_t entropy_length, const uint8_t *additional_input,
                         size_t additional_input_length);
 #endif  // __CHACHA_DRBG__
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

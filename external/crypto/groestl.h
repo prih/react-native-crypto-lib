@@ -33,6 +33,10 @@
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef GROESTL_H__
 #define GROESTL_H__
 
@@ -92,4 +96,8 @@ void groestl512_Final(void *cc, void *dst);
 /* Calculate double Groestl-512 hash and truncate it to 256-bits. */
 void groestl512_DoubleTrunc(void *cc, void *dst);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

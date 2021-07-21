@@ -21,6 +21,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __SECP256K1_H__
 #define __SECP256K1_H__
 
@@ -35,4 +39,8 @@ extern const curve_info secp256k1_decred_info;
 extern const curve_info secp256k1_groestl_info;
 extern const curve_info secp256k1_smart_info;
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

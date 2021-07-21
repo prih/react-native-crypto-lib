@@ -20,6 +20,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __HMAC_DRBG_H__
 #define __HMAC_DRBG_H__
 
@@ -40,4 +44,8 @@ void hmac_drbg_reseed(HMAC_DRBG_CTX *ctx, const uint8_t *buf, size_t len,
                       const uint8_t *addin, size_t addin_len);
 void hmac_drbg_generate(HMAC_DRBG_CTX *ctx, uint8_t *buf, size_t len);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

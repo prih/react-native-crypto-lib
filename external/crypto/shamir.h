@@ -27,6 +27,10 @@
  * intermediate level API. You have been warned!
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __SHAMIR_H__
 #define __SHAMIR_H__
 
@@ -68,3 +72,7 @@ bool shamir_interpolate(uint8_t *result, uint8_t result_index,
                         size_t len);
 
 #endif /* __SHAMIR_H__ */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

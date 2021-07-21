@@ -20,6 +20,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __SCHNORR_H__
 #define __SCHNORR_H__
 
@@ -33,4 +37,8 @@ int schnorr_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
                         const uint8_t *digest, uint8_t *result);
 int schnorr_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key,
                           const uint8_t *msg_hash, const uint8_t *sign);
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

@@ -21,6 +21,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __BASE58_H__
 #define __BASE58_H__
 
@@ -50,4 +54,8 @@ int base58gph_decode_check(const char *str, uint8_t *data, int datalen);
 int b58gphcheck(const void *bin, size_t binsz, const char *base58str);
 #endif
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

@@ -10,6 +10,10 @@
 #ifndef ECRYPT_TYPES
 #define ECRYPT_TYPES
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "ecrypt-config.h"
 
 /* ------------------------------------------------------------------------- */
@@ -48,6 +52,10 @@ typedef unsigned I32T u32;
 #ifdef I64T
 typedef signed I64T s64;
 typedef unsigned I64T u64;
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif
 
 #endif

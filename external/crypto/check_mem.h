@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef CHECK_MEM_H
 #define CHECK_MEM_H
 
@@ -27,4 +31,8 @@
 
 #endif
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

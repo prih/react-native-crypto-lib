@@ -21,6 +21,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __NIST256P1_H__
 #define __NIST256P1_H__
 
@@ -32,4 +36,8 @@
 extern const ecdsa_curve nist256p1;
 extern const curve_info nist256p1_info;
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

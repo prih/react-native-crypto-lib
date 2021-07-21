@@ -9,6 +9,10 @@
 
 /* ------------------------------------------------------------------------- */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if (defined(ECRYPT_DEFAULT_ROT) && !defined(ECRYPT_MACHINE_ROT))
 
 #define ECRYPT_MACHINE_ROT
@@ -47,3 +51,7 @@
 #endif
 
 /* ------------------------------------------------------------------------- */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

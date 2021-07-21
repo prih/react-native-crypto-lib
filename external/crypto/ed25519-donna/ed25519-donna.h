@@ -8,6 +8,10 @@
 		Bo-Yin Yang
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ED25519_DONNA_H
 #define ED25519_DONNA_H
 
@@ -49,4 +53,8 @@ typedef struct ge25519_pniels_t {
 
 #include "ed25519-donna-impl-base.h"
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ED25519_KECCAK_H
 #define ED25519_KECCAK_H
 
@@ -19,3 +23,7 @@ int ed25519_scalarmult_keccak(ed25519_public_key res, const ed25519_secret_key s
 #endif
 
 #endif // ED25519_KECCAK_H
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

@@ -58,6 +58,10 @@ Issue Date: 20/12/2007
         t_xxx(r,c)      => the rcon table
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if !defined( _AESTAB_H )
 #define _AESTAB_H
 
@@ -170,4 +174,8 @@ EXTERN ALIGN CONST uint32_t t_dec(r,c)[RC_LENGTH];
 }
 #endif
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

@@ -21,6 +21,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __BIP32_H__
 #define __BIP32_H__
 
@@ -153,4 +157,8 @@ void hdnode_get_address(HDNode *node, uint32_t version, char *addr,
 
 const curve_info *get_curve_by_name(const char *curve_name);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

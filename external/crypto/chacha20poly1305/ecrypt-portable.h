@@ -17,6 +17,10 @@
  * editing 'ecrypt-machine.h'.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ECRYPT_PORTABLE
 #define ECRYPT_PORTABLE
 
@@ -272,4 +276,8 @@
 
 /* ------------------------------------------------------------------------- */
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

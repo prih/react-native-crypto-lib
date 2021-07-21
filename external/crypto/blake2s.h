@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __BLAKE2S_H__
 #define __BLAKE2S_H__
 
@@ -38,4 +42,8 @@ int blake2s_Final(blake2s_state *S, void *out, size_t outlen);
 int blake2s(const uint8_t *msg, uint32_t msg_len, void *out, size_t outlen);
 int blake2s_Key(const uint8_t *msg, uint32_t msg_len, const void *key, size_t keylen, void *out, size_t outlen);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

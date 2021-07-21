@@ -5,6 +5,10 @@
 	32 bit integer curve25519 implementation
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef uint32_t bignum25519[10];
 
 /* out = in */
@@ -77,3 +81,7 @@ void curve25519_divpowm1(bignum25519 r, const bignum25519 u, const bignum25519 v
 
 /* Zmod(2^255-19) from byte array to bignum25519 expansion with modular reduction */
 void curve25519_expand_reduce(bignum25519 out, const unsigned char in[32]);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

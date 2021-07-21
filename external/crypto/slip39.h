@@ -22,6 +22,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __SLIP39_H__
 #define __SLIP39_H__
 
@@ -36,4 +40,8 @@ uint16_t slip39_word_completion_mask(uint16_t prefix);
 
 const char* button_sequence_to_word(uint16_t prefix);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

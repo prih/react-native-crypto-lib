@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ED25519_H
 #define ED25519_H
 
@@ -46,3 +50,7 @@ void ed25519_cosi_sign(const unsigned char *m, size_t mlen, const ed25519_secret
 #endif
 
 #endif // ED25519_H
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

@@ -5,6 +5,10 @@
 #include "ecrypt-sync.h"
 #include "poly1305-donna.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     ECRYPT_ctx       chacha20;
     poly1305_context poly1305;
@@ -15,5 +19,9 @@ void chacha20poly1305_encrypt(chacha20poly1305_ctx *ctx, const uint8_t *in, uint
 void chacha20poly1305_decrypt(chacha20poly1305_ctx *ctx, const uint8_t *in, uint8_t *out, size_t n);
 void chacha20poly1305_auth(chacha20poly1305_ctx *ctx, const uint8_t *in, size_t n);
 void chacha20poly1305_finish(chacha20poly1305_ctx *ctx, uint8_t mac[16]);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif // CHACHA20POLY1305_H

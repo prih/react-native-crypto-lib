@@ -21,6 +21,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __ADDRESS_H__
 #define __ADDRESS_H__
 
@@ -37,4 +41,8 @@ void ethereum_address_checksum(const uint8_t *addr, char *address, bool rskip60,
                                uint32_t chain_id);
 #endif
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

@@ -45,6 +45,10 @@
  * @author   Thomas Pornin <thomas.pornin@cryptolog.com>
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef GROESTL_INTERNAL_H__
 #define GROESTL_INTERNAL_H__
 
@@ -506,4 +510,8 @@ sph_dec64le_aligned(const void *src)
 #endif
 }
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

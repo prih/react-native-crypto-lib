@@ -23,6 +23,10 @@ Issue Date: 20/12/2007
 // data access and subroutine calls to be expressed in the same form in the
 // testing code.
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef AESTST_H
 #define AESTST_H
 
@@ -82,4 +86,8 @@ Issue Date: 20/12/2007
 #define do_dec(a,b,c,d) f_ecb_dec(a, b, c, 1)
 #endif
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

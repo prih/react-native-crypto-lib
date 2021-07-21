@@ -22,6 +22,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __RFC6979_H__
 #define __RFC6979_H__
 
@@ -37,4 +41,8 @@ void init_rfc6979(const uint8_t *priv_key, const uint8_t *hash,
 void generate_rfc6979(uint8_t rnd[32], rfc6979_state *rng);
 void generate_k_rfc6979(bignum256 *k, rfc6979_state *rng);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define mul32x32_64(a,b) (((uint64_t)(a))*(b))
 
 #include <stdlib.h>
@@ -22,3 +26,7 @@ static inline uint32_t U8TO32_LE(const unsigned char *p) {
 	 ((uint32_t)(p[2]) << 16) |
 	 ((uint32_t)(p[3]) << 24));
 }
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

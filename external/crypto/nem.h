@@ -20,6 +20,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __NEM_H__
 #define __NEM_H__
 
@@ -153,4 +157,8 @@ bool nem_transaction_create_importance_transfer(
     const ed25519_public_key signer, uint64_t fee, uint32_t deadline,
     uint32_t mode, const ed25519_public_key remote);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
 	Timing safe memory compare
 */
@@ -102,3 +106,7 @@ int ge25519_unpack_vartime(ge25519 *r, const unsigned char *s);
 
 /* aG, wrapper for niels base mult. */
 void ge25519_scalarmult_base_wrapper(ge25519 *r, const bignum256modm s);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

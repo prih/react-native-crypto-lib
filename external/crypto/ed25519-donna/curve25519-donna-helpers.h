@@ -5,6 +5,10 @@
 	Curve25519 implementation agnostic helpers
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * In:  b =   2^5 - 2^0
  * Out: b = 2^250 - 2^0
@@ -20,3 +24,7 @@ void curve25519_recip(bignum25519 out, const bignum25519 z);
  * z^((p-5)/8) = z^(2^252 - 3)
  */
 void curve25519_pow_two252m3(bignum25519 two252m3, const bignum25519 z);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

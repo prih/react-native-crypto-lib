@@ -9,6 +9,10 @@
 	void ed25519_hash(uint8_t *hash, const uint8_t *in, size_t inlen);
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ED25519_HASH_CUSTOM
 #define ED25519_HASH_CUSTOM
 
@@ -21,3 +25,7 @@
 #define ed25519_hash(hash, in, inlen) sha512_Raw((in), (inlen), (hash))
 
 #endif // ED25519_HASH_CUSTOM
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

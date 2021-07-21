@@ -22,6 +22,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __BIGNUM_H__
 #define __BIGNUM_H__
 
@@ -163,4 +167,8 @@ void bn_print(const bignum256 *x);
 void bn_print_raw(const bignum256 *x);
 #endif
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

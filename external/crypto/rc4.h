@@ -20,6 +20,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __RC4_H__
 #define __RC4_H__
 
@@ -34,4 +38,8 @@ typedef struct {
 void rc4_init(RC4_CTX *ctx, const uint8_t *key, size_t length);
 void rc4_encrypt(RC4_CTX *ctx, uint8_t *buffer, size_t length);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

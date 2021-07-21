@@ -5,4 +5,12 @@
  *   basepoint: a packed little endian point of the curve
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void curve25519_scalarmult_donna(curve25519_key mypublic, const curve25519_key n, const curve25519_key basepoint);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

@@ -28,6 +28,10 @@
 //
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __BLAKE256_H__
 #define __BLAKE256_H__
 
@@ -51,3 +55,7 @@ void blake256_Final(BLAKE256_CTX *, uint8_t *);
 void blake256(const uint8_t *, size_t, uint8_t *);
 
 #endif /* __BLAKE256_H__ */
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

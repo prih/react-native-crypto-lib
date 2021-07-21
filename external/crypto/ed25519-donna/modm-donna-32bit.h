@@ -12,6 +12,10 @@
 	mu = floor( b^(k*2) / m ) = 0xfffffffffffffffffffffffffffffffeb2106215d086329a7ed9ce5a30a2c131b
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define bignum256modm_bits_per_limb 30
 #define bignum256modm_limb_size 9
 
@@ -78,3 +82,7 @@ void mulsub256_modm(bignum256modm r, const bignum256modm a, const bignum256modm 
 
 /* (cc + aa * bb) % l */
 void muladd256_modm(bignum256modm r, const bignum256modm a, const bignum256modm b, const bignum256modm c);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

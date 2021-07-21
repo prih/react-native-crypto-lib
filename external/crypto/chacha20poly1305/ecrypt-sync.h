@@ -9,6 +9,10 @@
  * *** Please only edit parts marked with "[edit]". ***
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef ECRYPT_SYNC
 #define ECRYPT_SYNC
 
@@ -287,4 +291,8 @@ void ECRYPT_keystream_blocks(
 
 /* ------------------------------------------------------------------------- */
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif
