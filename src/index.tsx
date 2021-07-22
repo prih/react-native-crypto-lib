@@ -17,6 +17,11 @@ export enum HASH {
   RIPEMD160 = 7,
 }
 
+export enum DERIVE {
+  PRIVATE = 0,
+  PUBLIC = 1,
+}
+
 type CryptoLibType = {
   randomNumber(): number;
   randomBytes(length: number): Promise<Buffer>;
@@ -71,6 +76,20 @@ type secp256k1Type = {
   verify(pub: Buffer, sig: Buffer, digest: Buffer): Boolean;
   sign(priv: Buffer, digest: Buffer): Promise<signType>;
   signSync(priv: Buffer, digest: Buffer): signType;
+};
+
+type HDNodeData = {
+  depth: number;
+  child_num: number;
+  chain_code: Buffer;
+  private_key: Buffer;
+  public_key: Buffer;
+  fingerprint: Buffer;
+};
+
+type bip32Type = {
+  fromSeed(seed: Buffer): HDNodeData;
+  derive(data: HDNodeData, i?: number, type?: DERIVE): HDNodeData;
 };
 
 const { CryptoLib: CryptoLibNative } = NativeModules;
@@ -271,5 +290,62 @@ export const secp256k1 = {
     } as signType;
   },
 } as secp256k1Type;
+
+export const bip32 = {
+  fromSeed: (seed: Buffer) => {
+    const result = CryptoLibNative.hdNodeFromSeed(seed.toString('base64'));
+
+    if (!result) {
+      throw new Error('seed error');
+    }
+
+    const data = Buffer.from(result, 'base64');
+
+    return {
+      depth: data.slice(0, 4).readUInt32BE(),
+      child_num: data.slice(4, 8).readUInt32BE(),
+      chain_code: data.slice(8, 40),
+      private_key: data.slice(40, 72),
+      public_key: data.slice(72, 105),
+      fingerprint: data.slice(105, 109),
+    } as HDNodeData;
+  },
+  derive: (data: HDNodeData, i: number = 0, type = DERIVE.PRIVATE) => {
+    const depth = Buffer.alloc(4);
+    depth.writeUInt32BE(data.depth);
+    const child_num = Buffer.alloc(4);
+    child_num.writeUInt32BE(data.child_num);
+
+    const buf = Buffer.concat([
+      depth,
+      child_num,
+      data.chain_code,
+      data.private_key,
+      data.public_key,
+      data.fingerprint,
+    ]);
+
+    const result = CryptoLibNative.hdNodeDerive(
+      type,
+      buf.toString('base64'),
+      i
+    );
+
+    if (!result) {
+      throw new Error('seed error');
+    }
+
+    const new_data = Buffer.from(result, 'base64');
+
+    return {
+      depth: new_data.slice(0, 4).readUInt32BE(),
+      child_num: new_data.slice(4, 8).readUInt32BE(),
+      chain_code: new_data.slice(8, 40),
+      private_key: new_data.slice(40, 72),
+      public_key: new_data.slice(72, 105),
+      fingerprint: new_data.slice(105, 109),
+    } as HDNodeData;
+  },
+} as bip32Type;
 
 export default CryptoLib as CryptoLibType;

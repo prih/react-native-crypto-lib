@@ -229,11 +229,13 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     @ReactMethod(isBlockingSynchronousMethod = true)
     public String ecdsaEcdh(
       final String pub,
-      final String priv
+      final String priv,
+      final int compress
     ) {
       byte[] result = ecdsaEcdhNative(
         Base64.decode(pub, Base64.NO_PADDING),
-        Base64.decode(priv, Base64.NO_PADDING)
+        Base64.decode(priv, Base64.NO_PADDING),
+        compress
       );
       if (result == null) {
         return null;
@@ -289,6 +291,30 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
       return Base64.encodeToString(sig, Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String hdNodeFromSeed(
+      final String seed
+    ) {
+      byte[] data = hdNodeFromSeedNative(
+        Base64.decode(seed, Base64.NO_PADDING)
+      );
+      return Base64.encodeToString(data, Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String hdNodeDerive(
+      final int derive_type,
+      final String node_data,
+      final int index
+    ) {
+      byte[] data = hdNodeDeriveNative(
+        derive_type,
+        Base64.decode(node_data, Base64.NO_PADDING),
+        index
+      );
+      return Base64.encodeToString(data, Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
     public static native int randomNumberNative();
     public static native byte[] randomBytesNative(int length);
     public static native byte[] hashNative(int type, byte[] data);
@@ -303,7 +329,9 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     public static native byte[] ecdsaGetPublic33Native(byte[] priv);
     public static native byte[] ecdsaGetPublic65Native(byte[] priv);
     public static native byte[] ecdsaRecoverNative(byte[] sig, byte[] digest, int recid, int compress);
-    public static native byte[] ecdsaEcdhNative(byte[] pub, byte[] priv);
+    public static native byte[] ecdsaEcdhNative(byte[] pub, byte[] priv, int compress);
     public static native int ecdsaVerifyNative(byte[] pub, byte[] sig, byte[] digest);
     public static native byte[] ecdsaSignNative(byte[] priv, byte[] digest);
+    public static native byte[] hdNodeFromSeedNative(byte[] seed);
+    public static native byte[] hdNodeDeriveNative(int type, byte[] data, int index);
 }

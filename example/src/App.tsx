@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
-import { bip39, secp256k1 } from 'react-native-crypto-lib';
+import { bip39, secp256k1, bip32, DERIVE } from 'react-native-crypto-lib';
 // import crypto from 'crypto';
 import * as bip39js from 'bip39';
 import { Buffer } from 'buffer';
@@ -83,13 +83,17 @@ export default function App() {
             ),
             true
           );
-          // const x = ecdh.slice(1, 33);
-          // const y = ecdh.slice(33);
-
-          // console.log(x.toString('hex'));
-          // console.log(y.toString('hex'));
-
           console.log(ecdh.toString('hex'));
+
+          const seed = await bip39.mnemonicToSeed(
+            'resist unaware absent jazz pride will swift cigar soup journey doll come'
+          );
+
+          const root_node = bip32.fromSeed(seed);
+          console.log('root:', root_node);
+
+          const derive_node = bip32.derive(root_node, 0, DERIVE.PRIVATE);
+          console.log('derive:', derive_node);
         }}
       />
       <Text>Result Native: {result_time1}</Text>

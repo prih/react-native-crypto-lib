@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <stdexcept>
+#include <string>
 
 #include "options.h"
 #include "rand.h"
@@ -13,6 +14,7 @@
 #include "secp256k1.h"
 #include "bignum.h"
 #include "memzero.h"
+#include "bip32.h"
 
 enum HASH_TYPE {
   SHA1,
@@ -28,6 +30,11 @@ enum HASH_TYPE {
 enum HMAC_TYPE {
   HMAC_SHA256,
   HMAC_SHA512,
+};
+
+enum DERIVE_TYPE {
+  DERIVE_PRIVATE,
+  DERIVE_PUBLIC,
 };
 
 extern "C"
@@ -562,6 +569,112 @@ Java_com_reactnativecryptolib_CryptoLibModule_ecdsaSignNative(
   jbyteArray result = env->NewByteArray(65);
   env->SetByteArrayRegion(result, 0, 65, (const jbyte *)sig);
   free(sig);
+
+  return result;
+}
+
+#pragma pack(push, 1)
+typedef struct {
+  uint32_t depth;
+  uint32_t child_num;
+  uint8_t chain_code[32];
+  uint8_t private_key[32];
+  uint8_t public_key[33];
+  uint32_t fingerprint;
+} HDNodeData;
+#pragma pack(pop)
+
+void hdnode_read_data(HDNode *node, HDNodeData *data) {
+  uint32_t fp = hdnode_fingerprint(node);
+
+  memcpy(&data->depth, &node->depth, sizeof(node->depth));
+  memcpy(&data->child_num, &node->child_num, sizeof(node->child_num));
+  memcpy(&data->chain_code, &node->chain_code, sizeof(node->chain_code));
+  memcpy(&data->private_key, &node->private_key, sizeof(node->private_key));
+  memcpy(&data->public_key, &node->public_key, sizeof(node->public_key));
+  memcpy(&data->fingerprint, &fp, sizeof(fp));
+  fp = 0;
+}
+
+void hdnode_write_data(HDNode *node, HDNodeData *data) {
+  memcpy(&node->depth, &data->depth, sizeof(node->depth));
+  memcpy(&node->child_num, &data->child_num, sizeof(node->child_num));
+  memcpy(&node->chain_code, &data->chain_code, sizeof(node->chain_code));
+  memcpy(&node->private_key, &data->private_key, sizeof(node->private_key));
+  memcpy(&node->public_key, &data->public_key, sizeof(node->public_key));
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_hdNodeFromSeedNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jbyteArray seed
+) {
+  if (env->GetArrayLength(seed) != 64) {
+    return NULL;
+  }
+
+  const uint8_t *raw_seed = (uint8_t *) env->GetByteArrayElements(seed, (jboolean *)false);
+
+  HDNode node = {};
+  const char *curve = "secp256k1";
+  int success = hdnode_from_seed(raw_seed, 64, curve, &node);
+
+  if (success != 1) {
+    return NULL;
+  }
+
+  HDNodeData data = {};
+  hdnode_read_data(&node, &data);
+  
+  jbyteArray result = env->NewByteArray(sizeof(data));
+  env->SetByteArrayRegion(result, 0, sizeof(data), (const jbyte *)&data);
+
+  return result;
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_hdNodeDeriveNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jint derive_type,
+  const jbyteArray node_data,
+  const jint index
+) {
+  if (env->GetArrayLength(node_data) != sizeof(HDNodeData)) {
+    return NULL;
+  }
+
+  HDNodeData *data = (HDNodeData *) env->GetByteArrayElements(node_data, (jboolean *)false);
+
+  const char *curve = "secp256k1";
+  HDNode node = {};
+  hdnode_write_data(&node, data);
+  node.curve = get_curve_by_name(curve);
+
+  int success = 0;
+
+  if (derive_type == DERIVE_PRIVATE) {
+    success = hdnode_private_ckd(&node, index);
+  } else {
+    success = hdnode_public_ckd(&node, index);
+  }
+
+  if (success != 1) {
+    memzero(&node, sizeof(node));
+    memzero(data, sizeof(HDNodeData));
+    return NULL;
+  }
+
+  hdnode_read_data(&node, data);
+  
+  jbyteArray result = env->NewByteArray(sizeof(data));
+  env->SetByteArrayRegion(result, 0, sizeof(data), (const jbyte *)&data);
+
+  memzero(&node, sizeof(node));
+  memzero(data, sizeof(HDNodeData));
 
   return result;
 }

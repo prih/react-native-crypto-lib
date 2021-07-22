@@ -12,6 +12,7 @@
 #import "secp256k1.h"
 #import "bignum.h"
 #import "memzero.h"
+#import "bip32.h"
 
 @implementation CryptoLib
 
@@ -30,6 +31,11 @@ typedef enum {
   HMAC_SHA256,
   HMAC_SHA512
 } HMAC_TYPE;
+
+typedef enum {
+  DERIVE_PRIVATE,
+  DERIVE_PUBLIC
+} DERIVE_TYPE;
 
 RCT_EXPORT_MODULE()
 
@@ -581,6 +587,112 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 
   NSData *result = [NSData dataWithBytes:sig length:65];
   free(sig);
+
+  return [result base64EncodedStringWithOptions:0];
+}
+
+#pragma pack(push, 1)
+typedef struct {
+  uint32_t depth;
+  uint32_t child_num;
+  uint8_t chain_code[32];
+  uint8_t private_key[32];
+  uint8_t public_key[33];
+  uint32_t fingerprint;
+} HDNodeData;
+#pragma pack(pop)
+
+void hdnode_read_data(HDNode *node, HDNodeData *data) {
+  uint32_t fp = hdnode_fingerprint(node);
+
+  memcpy(&data->depth, &node->depth, sizeof(node->depth));
+  memcpy(&data->child_num, &node->child_num, sizeof(node->child_num));
+  memcpy(&data->chain_code, &node->chain_code, sizeof(node->chain_code));
+  memcpy(&data->private_key, &node->private_key, sizeof(node->private_key));
+  memcpy(&data->public_key, &node->public_key, sizeof(node->public_key));
+  memcpy(&data->fingerprint, &fp, sizeof(fp));
+  fp = 0;
+}
+
+void hdnode_write_data(HDNode *node, HDNodeData *data) {
+  memcpy(&node->depth, &data->depth, sizeof(node->depth));
+  memcpy(&node->child_num, &data->child_num, sizeof(node->child_num));
+  memcpy(&node->chain_code, &data->chain_code, sizeof(node->chain_code));
+  memcpy(&node->private_key, &data->private_key, sizeof(node->private_key));
+  memcpy(&node->public_key, &data->public_key, sizeof(node->public_key));
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  hdNodeFromSeed:(NSString *)seed
+)
+{
+  NSData *raw_seed = [[NSData alloc]initWithBase64EncodedString:seed options:0];
+
+  if ([raw_seed length] != 64) {
+    @throw [NSException exceptionWithName:@"Error" reason:@"wrong seed size" userInfo:nil];
+  }
+
+  HDNode node = {0};
+  const char *curve = "secp256k1";
+  int success = hdnode_from_seed([raw_seed bytes], [raw_seed length], curve, &node);
+  memzero((void *)[raw_seed bytes], [raw_seed length]);
+
+  if (success != 1) {
+    memzero(&node, sizeof(node));
+    @throw [NSException exceptionWithName:@"Error" reason:@"seed error" userInfo:nil];
+  }
+
+  HDNodeData data = {0};
+  hdnode_read_data(&node, &data);
+
+  NSData *result = [NSData dataWithBytes:&data length:sizeof(data)];
+
+  memzero(&node, sizeof(node));
+  memzero(&data, sizeof(data));
+
+  return [result base64EncodedStringWithOptions:0];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  hdNodeDerive:(int)derive_type
+  withData:(NSString *)node_data
+  withIndex:(int)index
+)
+{
+  NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:node_data options:0];
+
+  if ([raw_data length] != sizeof(HDNodeData)) {
+    @throw [NSException exceptionWithName:@"Error" reason:@"wrong data size" userInfo:nil];
+  }
+
+  HDNodeData *data = (HDNodeData *)[raw_data bytes];
+  memzero((void *)[raw_data bytes], [raw_data length]);
+
+  const char *curve = "secp256k1";
+  HDNode node = {};
+  hdnode_write_data(&node, data);
+  node.curve = get_curve_by_name(curve);
+
+  int success = 0;
+
+  if (derive_type == DERIVE_PRIVATE) {
+    success = hdnode_private_ckd(&node, index);
+  } else {
+    success = hdnode_public_ckd(&node, index);
+  }
+
+  if (success != 1) {
+    memzero(&node, sizeof(node));
+    memzero(data, sizeof(HDNodeData));
+    @throw [NSException exceptionWithName:@"Error" reason:@"derive error" userInfo:nil];
+  }
+
+  hdnode_read_data(&node, data);
+
+  NSData *result = [NSData dataWithBytes:&data length:sizeof(data)];
+
+  memzero(&node, sizeof(node));
+  memzero(data, sizeof(HDNodeData));
 
   return [result base64EncodedStringWithOptions:0];
 }
