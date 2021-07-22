@@ -63,6 +63,8 @@ const public33 = CryptoLib.ecdsaGetPublic(priv);
 const public65 = CryptoLib.ecdsaGetPublic(priv, false);
 const is_valid33 = CryptoLib.ecdsaValidatePublic(public33);
 const is_valid65 = CryptoLib.ecdsaValidatePublic(public65);
+const public33 = CryptoLib.ecdsaRecover(sig, digest, recid, true);
+const public65 = CryptoLib.ecdsaRecover(sig, digest, recid, false);
 ```
 
 ## Contributing

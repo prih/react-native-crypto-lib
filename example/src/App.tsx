@@ -81,7 +81,8 @@ export default function App() {
               '423840043a1d6ec96381259c34b66cc98264b3ebe3b663c12a888705a588496e',
               'hex'
             ),
-            0
+            0,
+            true
           );
           console.log(pub_rec.toString('hex'));
         }}

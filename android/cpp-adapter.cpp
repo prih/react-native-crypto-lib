@@ -12,6 +12,7 @@
 #include "ecdsa.h"
 #include "secp256k1.h"
 #include "bignum.h"
+#include "memzero.h"
 
 enum HASH_TYPE {
   SHA1,
@@ -377,4 +378,66 @@ Java_com_reactnativecryptolib_CryptoLibModule_ecdsaGetPublic65Native(
   free(pub);
 
   return result;
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_ecdsaRecoverNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jbyteArray sig,
+  const jbyteArray digest,
+  const jint recid,
+  const jint compress
+) {
+  jsize sig_length = env->GetArrayLength(sig);
+  if (sig_length != 64) {
+    return NULL;
+  }
+
+  jsize digest_length = env->GetArrayLength(digest);
+  if (digest_length != 32) {
+    return NULL;
+  }
+
+  const uint8_t *raw_sig = (uint8_t *) env->GetByteArrayElements(sig, (jboolean *)false);
+  const uint8_t *raw_digest = (uint8_t *) env->GetByteArrayElements(digest, (jboolean *)false);
+
+  uint8_t *pub = (uint8_t *) malloc(65);
+  int err = ecdsa_recover_pub_from_sig(
+    &secp256k1,
+    pub,
+    raw_sig,
+    raw_digest,
+    recid
+  );
+
+  if (err > 0) {
+    free(pub);
+    return NULL;
+  }
+
+  if (compress == 0) {
+    jbyteArray result = env->NewByteArray(65);
+    env->SetByteArrayRegion(result, 0, 65, (const jbyte *)pub);
+    free(pub);
+    return result;
+  } else {
+    uint8_t *pub_key = (uint8_t *) malloc(33);
+
+    curve_point p = {};
+    bn_read_be(pub + 1, &(p.x));
+    bn_read_be(pub + 33, &(p.y));
+
+    pub_key[0] = 0x02 | (p.y.val[0] & 0x01);
+    bn_write_be(&p.x, pub_key + 1);
+    memzero(&p, sizeof(p));
+
+    jbyteArray result = env->NewByteArray(33);
+    env->SetByteArrayRegion(result, 0, 33, (const jbyte *)pub_key);
+    free(pub);
+    free(pub_key);
+
+    return result;
+  }
 }

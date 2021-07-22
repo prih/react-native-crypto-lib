@@ -11,6 +11,7 @@
 #import "ecdsa.h"
 #import "secp256k1.h"
 #import "bignum.h"
+#import "memzero.h"
 
 @implementation CryptoLib
 
@@ -391,6 +392,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   ecdsaRecover:(NSString *)sig
   withDigest:(NSString *)digest
   withRecid:(int)recid
+  withCompress:(int)compress
 )
 {
   NSData *raw_sig = [[NSData alloc]initWithBase64EncodedString:sig options:0];
@@ -408,12 +410,31 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   int err = ecdsa_recover_pub_from_sig(&secp256k1, pub, [raw_sig bytes], [raw_digest bytes], recid);
 
   if (err > 0) {
+    free(pub);
     @throw [NSException exceptionWithName:@"recoverError" reason:@"recover error" userInfo:nil];
   }
 
-  NSData *result = [NSData dataWithBytes:pub length:65];
-  
-  free(pub);
+  NSData *result;
+
+  if (compress == 0) {
+    result = [NSData dataWithBytes:pub length:65];
+    free(pub);
+  } else {
+    uint8_t *pub_key = (uint8_t *) malloc(33);
+
+    curve_point p = {0};
+    bn_read_be(pub + 1, &(p.x));
+    bn_read_be(pub + 33, &(p.y));
+
+    pub_key[0] = 0x02 | (p.y.val[0] & 0x01);
+    bn_write_be(&p.x, pub_key + 1);
+    memzero(&p, sizeof(p));
+
+    result = [NSData dataWithBytes:pub_key length:33];
+    free(pub);
+    free(pub_key);
+  }
+
   return [result base64EncodedStringWithOptions:0];
 }
 

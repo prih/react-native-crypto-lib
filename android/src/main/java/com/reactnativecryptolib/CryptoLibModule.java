@@ -207,6 +207,25 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
       return Base64.encodeToString(result, Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String ecdsaRecover(
+      final String sig,
+      final String digest,
+      final int recid,
+      final int compress
+    ) {
+      byte[] result = ecdsaRecoverNative(
+        Base64.decode(sig, Base64.NO_PADDING),
+        Base64.decode(digest, Base64.NO_PADDING),
+        recid,
+        compress
+      );
+      if (result == null) {
+        return null;
+      }
+      return Base64.encodeToString(result, Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
     public static native int randomNumberNative();
     public static native byte[] randomBytesNative(int length);
     public static native byte[] hashNative(int type, byte[] data);
@@ -220,4 +239,5 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     public static native int ecdsaValidatePrivateNative(byte[] priv);
     public static native byte[] ecdsaGetPublic33Native(byte[] priv);
     public static native byte[] ecdsaGetPublic65Native(byte[] priv);
+    public static native byte[] ecdsaRecoverNative(byte[] sig, byte[] digest, int recid, int compress);
 }
