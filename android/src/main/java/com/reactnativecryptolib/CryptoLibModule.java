@@ -226,6 +226,69 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
       return Base64.encodeToString(result, Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String ecdsaEcdh(
+      final String pub,
+      final String priv
+    ) {
+      byte[] result = ecdsaEcdhNative(
+        Base64.decode(pub, Base64.NO_PADDING),
+        Base64.decode(priv, Base64.NO_PADDING)
+      );
+      if (result == null) {
+        return null;
+      }
+      return Base64.encodeToString(result, Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public int ecdsaVerify(
+      final String pub,
+      final String sig,
+      final String digest
+    ) {
+      return ecdsaVerifyNative(
+        Base64.decode(pub, Base64.NO_PADDING),
+        Base64.decode(sig, Base64.NO_PADDING),
+        Base64.decode(digest, Base64.NO_PADDING)
+      );
+    }
+
+    @ReactMethod
+    public void ecdsaSign(
+      final String priv,
+      final String digest,
+      Promise promise
+    ) {
+      AsyncTask.execute(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            byte[] sig = ecdsaSignNative(
+              Base64.decode(priv, Base64.NO_PADDING),
+              Base64.decode(digest, Base64.NO_PADDING)
+            );
+            promise.resolve(Base64.encodeToString(sig, Base64.NO_PADDING | Base64.NO_WRAP));
+          } catch (Exception ex) {
+            ex.printStackTrace();
+            promise.reject("Error", ex.toString());
+          }
+        }
+      });
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
+    public String ecdsaSignSync(
+      final String priv,
+      final String digest
+    ) {
+      byte[] sig = ecdsaSignNative(
+        Base64.decode(priv, Base64.NO_PADDING),
+        Base64.decode(digest, Base64.NO_PADDING)
+      );
+      return Base64.encodeToString(sig, Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
     public static native int randomNumberNative();
     public static native byte[] randomBytesNative(int length);
     public static native byte[] hashNative(int type, byte[] data);
@@ -240,4 +303,7 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     public static native byte[] ecdsaGetPublic33Native(byte[] priv);
     public static native byte[] ecdsaGetPublic65Native(byte[] priv);
     public static native byte[] ecdsaRecoverNative(byte[] sig, byte[] digest, int recid, int compress);
+    public static native byte[] ecdsaEcdhNative(byte[] pub, byte[] priv);
+    public static native int ecdsaVerifyNative(byte[] pub, byte[] sig, byte[] digest);
+    public static native byte[] ecdsaSignNative(byte[] priv, byte[] digest);
 }

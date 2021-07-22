@@ -37,40 +37,57 @@ type CryptoLibType = {
     keyLength?: number,
     digest?: HMAC
   ): Buffer;
+};
+
+type bip39Type = {
   mnemonicToSeed(mnemonic: string, passphrase?: string): Promise<Buffer>;
   mnemonicToSeedSync(mnemonic: string, passphrase?: string): Buffer;
   generateMnemonic(strength?: number): String;
   validateMnemonic(mnemonic: string): Boolean;
-  ecdsaRandomPrivate(): Buffer;
-  ecdsaValidatePublic(pub: Buffer): Boolean;
-  ecdsaValidatePrivate(priv: Buffer): Boolean;
-  ecdsaGetPublic(priv: Buffer, compress?: Boolean): Buffer;
-  ecdsaRecover(
+};
+
+type secp256k1Type = {
+  randomPrivate(): Buffer;
+  validatePublic(pub: Buffer): Boolean;
+  validatePrivate(priv: Buffer): Boolean;
+  getPublic(priv: Buffer, compress?: Boolean): Buffer;
+  recover(
     sig: Buffer,
     digest: Buffer,
     recid: number,
     compress?: Boolean
   ): Buffer;
+  ecdh(pub: Buffer, priv: Buffer): Buffer;
+  verify(pub: Buffer, sig: Buffer, digest: Buffer): Boolean;
+  sign(priv: Buffer, digest: Buffer): Promise<Buffer>;
+  signSync(priv: Buffer, digest: Buffer): Buffer;
 };
 
-const { CryptoLib } = NativeModules;
+const { CryptoLib: CryptoLibNative } = NativeModules;
 
-const CryptoLibJs = {
-  randomNumber: CryptoLib.randomNumber,
+const CryptoLib = {
+  randomNumber: CryptoLibNative.randomNumber,
   randomBytes: (length: number) => {
-    return CryptoLib.randomBytes(length).then((bytes: string) => {
+    return CryptoLibNative.randomBytes(length).then((bytes: string) => {
       return Buffer.from(bytes, 'base64');
     });
   },
   randomBytesSync: (length: number) => {
-    return Buffer.from(CryptoLib.randomBytes(length), 'base64');
+    return Buffer.from(CryptoLibNative.randomBytes(length), 'base64');
   },
   hash: (type: HASH, data: Buffer) => {
-    return Buffer.from(CryptoLib.hash(type, data.toString('base64')), 'base64');
+    return Buffer.from(
+      CryptoLibNative.hash(type, data.toString('base64')),
+      'base64'
+    );
   },
   hmac: (type: HMAC, key: Buffer, data: Buffer) => {
     return Buffer.from(
-      CryptoLib.hmac(type, key.toString('base64'), data.toString('base64')),
+      CryptoLibNative.hmac(
+        type,
+        key.toString('base64'),
+        data.toString('base64')
+      ),
       'base64'
     );
   },
@@ -81,7 +98,7 @@ const CryptoLibJs = {
     keyLength = 32,
     digest = HMAC.SHA256
   ) => {
-    return CryptoLib.pbkdf2(
+    return CryptoLibNative.pbkdf2(
       digest,
       Buffer.from(pass).toString('base64'),
       Buffer.from(salt).toString('base64'),
@@ -99,7 +116,7 @@ const CryptoLibJs = {
     digest = HMAC.SHA256
   ) => {
     return Buffer.from(
-      CryptoLib.pbkdf2Sync(
+      CryptoLibNative.pbkdf2Sync(
         digest,
         Buffer.from(pass).toString('base64'),
         Buffer.from(salt).toString('base64'),
@@ -109,8 +126,11 @@ const CryptoLibJs = {
       'base64'
     );
   },
+};
+
+export const bip39 = {
   mnemonicToSeed: (mnemonic: string, passphrase: string = '') => {
-    return CryptoLib.mnemonicToSeed(mnemonic, passphrase).then(
+    return CryptoLibNative.mnemonicToSeed(mnemonic, passphrase).then(
       (result: string) => {
         return Buffer.from(result, 'base64');
       }
@@ -118,18 +138,21 @@ const CryptoLibJs = {
   },
   mnemonicToSeedSync: (mnemonic: string, passphrase: string = '') => {
     return Buffer.from(
-      CryptoLib.mnemonicToSeedSync(mnemonic, passphrase),
+      CryptoLibNative.mnemonicToSeedSync(mnemonic, passphrase),
       'base64'
     );
   },
   generateMnemonic: (strength: number = 12) => {
-    return CryptoLib.generateMnemonic(strength);
+    return CryptoLibNative.generateMnemonic(strength);
   },
   validateMnemonic: (mnemonic: string) => {
-    return CryptoLib.validateMnemonic(mnemonic) === 1;
+    return CryptoLibNative.validateMnemonic(mnemonic) === 1;
   },
-  ecdsaRandomPrivate: () => {
-    const result = CryptoLib.ecdsaRandomPrivate();
+} as bip39Type;
+
+export const secp256k1 = {
+  randomPrivate: () => {
+    const result = CryptoLibNative.ecdsaRandomPrivate();
 
     if (!result) {
       throw new Error('wrong key');
@@ -137,19 +160,21 @@ const CryptoLibJs = {
 
     return Buffer.from(result, 'base64');
   },
-  ecdsaValidatePublic: (pub: Buffer) => {
-    return CryptoLib.ecdsaValidatePublic(pub.toString('base64')) === 1;
+  validatePublic: (pub: Buffer) => {
+    return CryptoLibNative.ecdsaValidatePublic(pub.toString('base64')) === 1;
   },
-  ecdsaValidatePrivate: (priv: Buffer) => {
-    const result = CryptoLib.ecdsaValidatePrivate(priv.toString('base64'));
+  validatePrivate: (priv: Buffer) => {
+    const result = CryptoLibNative.ecdsaValidatePrivate(
+      priv.toString('base64')
+    );
     return result === 1;
   },
-  ecdsaGetPublic: (priv: Buffer, compress: Boolean = true) => {
+  getPublic: (priv: Buffer, compress: Boolean = true) => {
     let result = null;
     if (compress) {
-      result = CryptoLib.ecdsaGetPublic33(priv.toString('base64'));
+      result = CryptoLibNative.ecdsaGetPublic33(priv.toString('base64'));
     } else {
-      result = CryptoLib.ecdsaGetPublic65(priv.toString('base64'));
+      result = CryptoLibNative.ecdsaGetPublic65(priv.toString('base64'));
     }
 
     if (!result) {
@@ -158,13 +183,13 @@ const CryptoLibJs = {
 
     return Buffer.from(result, 'base64');
   },
-  ecdsaRecover: (
+  recover: (
     sig: Buffer,
     digest: Buffer,
     recid: number,
     compress: Boolean = true
   ) => {
-    const result = CryptoLib.ecdsaRecover(
+    const result = CryptoLibNative.ecdsaRecover(
       sig.toString('base64'),
       digest.toString('base64'),
       recid,
@@ -177,6 +202,46 @@ const CryptoLibJs = {
 
     return Buffer.from(result, 'base64');
   },
-};
+  ecdh: (pub: Buffer, priv: Buffer) => {
+    const result = CryptoLibNative.ecdsaEcdh(
+      pub.toString('base64'),
+      priv.toString('base64')
+    );
 
-export default CryptoLibJs as CryptoLibType;
+    if (!result) {
+      throw new Error('recover error');
+    }
+
+    return Buffer.from(result, 'base64');
+  },
+  verify: (pub: Buffer, sig: Buffer, digest: Buffer) => {
+    const result = CryptoLibNative.ecdsaVerify(
+      pub.toString('base64'),
+      sig.toString('base64'),
+      digest.toString('base64')
+    );
+    return result === 1;
+  },
+  sign: (priv: Buffer, digest: Buffer) => {
+    return CryptoLibNative.ecdsaSign(
+      priv.toString('base64'),
+      digest.toString('base64')
+    ).then((result: string) => {
+      return Buffer.from(result, 'base64');
+    });
+  },
+  signSync: (priv: Buffer, digest: Buffer) => {
+    const result = CryptoLibNative.ecdsaSignSync(
+      priv.toString('base64'),
+      digest.toString('base64')
+    );
+
+    if (!result) {
+      throw new Error('recover error');
+    }
+
+    return Buffer.from(result, 'base64');
+  },
+} as secp256k1Type;
+
+export default CryptoLib as CryptoLibType;

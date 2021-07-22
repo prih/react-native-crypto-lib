@@ -11,7 +11,12 @@ npm install react-native-crypto-lib
 ## Usage
 
 ```js
-import CryptoLib, { HASH, HMAC } from 'react-native-crypto-lib';
+import CryptoLib, {
+  HASH,
+  HMAC,
+  bip39,
+  secp256k1
+} from 'react-native-crypto-lib';
 import { Buffer } from 'buffer';
 
 // ...
@@ -51,20 +56,24 @@ const pbkdf2_256_buffer = CryptoLib.pbkdf2Sync('password', 'salt', 10000, 32, HM
 const pbkdf2_512_buffer = CryptoLib.pbkdf2Sync('password', 'salt', 10000, 32, HMAC.SHA512);
 
 // BIP39
-const seed_buffer = await CryptoLib.mnemonicToSeed('words...', 'password (optional)');
-const seed_buffer = CryptoLib.mnemonicToSeedSync('words...', 'password (optional)');
-const mnemonic = CryptoLib.generateMnemonic(24);
-const is_valid_mnemonic = CryptoLib.validateMnemonic('words...');
+const seed_buffer = await bip39.mnemonicToSeed('words...', 'password (optional)');
+const seed_buffer = bip39.mnemonicToSeedSync('words...', 'password (optional)');
+const mnemonic = bip39.generateMnemonic(24);
+const is_valid_mnemonic = bip39.validateMnemonic('words...');
 
-// ECDSA secp256k1
-const priv = CryptoLib.ecdsaRandomPrivate();
-const is_valid_priv = CryptoLib.ecdsaValidatePrivate(priv);
-const public33 = CryptoLib.ecdsaGetPublic(priv);
-const public65 = CryptoLib.ecdsaGetPublic(priv, false);
-const is_valid33 = CryptoLib.ecdsaValidatePublic(public33);
-const is_valid65 = CryptoLib.ecdsaValidatePublic(public65);
-const public33 = CryptoLib.ecdsaRecover(sig, digest, recid, true);
-const public65 = CryptoLib.ecdsaRecover(sig, digest, recid, false);
+// secp256k1 ECDSA/ECDH
+const priv = secp256k1.randomPrivate();
+const is_valid_priv = secp256k1.validatePrivate(priv);
+const public33 = secp256k1.getPublic(priv);
+const public65 = secp256k1.getPublic(priv, false);
+const is_valid33 = secp256k1.validatePublic(public33);
+const is_valid65 = secp256k1.validatePublic(public65);
+const public33 = secp256k1.recover(sig, digest, recid, true);
+const public65 = secp256k1.recover(sig, digest, recid, false);
+const ecdh_point65 = secp256k1.ecdh(pub, priv);
+const is_verif = secp256k1.verify(pub, sig, digest);
+const sig = await secp256k1.sign(priv, digest);
+const sig = secp256k1.signSync(priv, digest);
 ```
 
 ## Contributing

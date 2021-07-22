@@ -446,7 +446,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   NSData *raw_pub = [[NSData alloc]initWithBase64EncodedString:pub options:0];
   NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
 
-  if ([raw_pub length] != 33 || [raw_pub length] != 65) {
+  if ([raw_pub length] != 33 && [raw_pub length] != 65) {
     @throw [NSException exceptionWithName:@"keySizeError" reason:@"wrong key size" userInfo:nil];
   }
 
@@ -478,7 +478,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   NSData *raw_sig = [[NSData alloc]initWithBase64EncodedString:sig options:0];
   NSData *raw_digest = [[NSData alloc]initWithBase64EncodedString:digest options:0];
 
-  if ([raw_pub length] != 33 || [raw_pub length] != 65) {
+  if ([raw_pub length] != 33 && [raw_pub length] != 65) {
     @throw [NSException exceptionWithName:@"keySizeError" reason:@"wrong key size" userInfo:nil];
   }
 

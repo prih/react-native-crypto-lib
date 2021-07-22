@@ -1,9 +1,9 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text, Button } from 'react-native';
-import CryptoLib from 'react-native-crypto-lib';
+import { bip39, secp256k1 } from 'react-native-crypto-lib';
 // import crypto from 'crypto';
-import * as bip39 from 'bip39';
+import * as bip39js from 'bip39';
 import { Buffer } from 'buffer';
 
 async function test1() {
@@ -22,7 +22,7 @@ async function test1() {
     //   HMAC.SHA256
     // );
 
-    await CryptoLib.mnemonicToSeed(
+    await bip39.mnemonicToSeed(
       'resist unaware absent jazz pride will swift cigar soup journey doll come'
     );
   }
@@ -40,7 +40,7 @@ async function test2() {
   const t_start = new Date();
   for (let i = 0; i < 1; i++) {
     // crypto.pbkdf2Sync('Fg987h7fGjh9d7', 'hmn9k8h9j8', 100000, 32, 'sha256');
-    await bip39.mnemonicToSeed(
+    await bip39js.mnemonicToSeed(
       'resist unaware absent jazz pride will swift cigar soup journey doll come'
     );
   }
@@ -63,16 +63,16 @@ export default function App() {
           const t2 = await test2();
           setResultTime2(t2);
 
-          const priv = CryptoLib.ecdsaRandomPrivate();
-          const is_valid_priv = CryptoLib.ecdsaValidatePrivate(priv);
-          const public33 = CryptoLib.ecdsaGetPublic(priv);
-          const public65 = CryptoLib.ecdsaGetPublic(priv, false);
-          const is_valid33 = CryptoLib.ecdsaValidatePublic(public33);
-          const is_valid65 = CryptoLib.ecdsaValidatePublic(public65);
+          const priv = secp256k1.randomPrivate();
+          const is_valid_priv = secp256k1.validatePrivate(priv);
+          const public33 = secp256k1.getPublic(priv);
+          const public65 = secp256k1.getPublic(priv, false);
+          const is_valid33 = secp256k1.validatePublic(public33);
+          const is_valid65 = secp256k1.validatePublic(public65);
 
           console.log(is_valid_priv, is_valid33, is_valid65);
 
-          const pub_rec = CryptoLib.ecdsaRecover(
+          const pub_rec = secp256k1.recover(
             Buffer.from(
               '320d39ee6258f6b912307994ba603b9522ead3af2790b0eed23e6cade7d86125099300e015a6acaff1a9dbd96d57a1892e47d76211d13e6f235fd1a26e3c5c09',
               'hex'

@@ -441,3 +441,108 @@ Java_com_reactnativecryptolib_CryptoLibModule_ecdsaRecoverNative(
     return result;
   }
 }
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_ecdsaEcdhNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jbyteArray pub,
+  const jbyteArray priv
+) {
+  jsize pub_length = env->GetArrayLength(pub);
+  if (pub_length != 33 && pub_length != 65) {
+    return NULL;
+  }
+
+  jsize priv_length = env->GetArrayLength(priv);
+  if (priv_length != 32) {
+    return NULL;
+  }
+
+  const uint8_t *raw_pub = (uint8_t *) env->GetByteArrayElements(pub, (jboolean *)false);
+  const uint8_t *raw_priv = (uint8_t *) env->GetByteArrayElements(priv, (jboolean *)false);
+
+  uint8_t *ecdh = (uint8_t *) malloc(65);
+  int err = ecdh_multiply(&secp256k1, raw_priv, raw_pub, ecdh);
+
+  if (err != 0) {
+    free(ecdh);
+    return NULL;
+  }
+  
+  jbyteArray result = env->NewByteArray(65);
+  env->SetByteArrayRegion(result, 0, 65, (const jbyte *)ecdh);
+  free(ecdh);
+
+  return result;
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_ecdsaVerifyNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jbyteArray pub,
+  const jbyteArray sig,
+  const jbyteArray digest
+) {
+  jsize pub_length = env->GetArrayLength(pub);
+  if (pub_length != 33 && pub_length != 65) {
+    return 0;
+  }
+
+  if (env->GetArrayLength(sig) != 64) {
+    return 0;
+  }
+
+  if (env->GetArrayLength(digest) != 32) {
+    return 0;
+  }
+
+  const uint8_t *raw_pub = (uint8_t *) env->GetByteArrayElements(pub, (jboolean *)false);
+  const uint8_t *raw_sig = (uint8_t *) env->GetByteArrayElements(sig, (jboolean *)false);
+  const uint8_t *raw_digest = (uint8_t *) env->GetByteArrayElements(digest, (jboolean *)false);
+
+  int err = ecdsa_verify_digest(&secp256k1, raw_pub, raw_sig, raw_digest);
+
+  if (err != 0) {
+    return 0;
+  }
+
+  return 1;
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_ecdsaSignNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jbyteArray priv,
+  const jbyteArray digest
+) {
+  if (env->GetArrayLength(priv) != 32) {
+    return NULL;
+  }
+
+  if (env->GetArrayLength(digest) != 32) {
+    return NULL;
+  }
+
+  const uint8_t *raw_priv = (uint8_t *) env->GetByteArrayElements(priv, (jboolean *)false);
+  const uint8_t *raw_digest = (uint8_t *) env->GetByteArrayElements(digest, (jboolean *)false);
+
+  uint8_t *sig = (uint8_t *) malloc(65);
+  int err = ecdsa_sign_digest(&secp256k1, raw_priv, raw_digest, sig + 1, sig, 0);
+
+  if (err != 0) {
+    free(sig);
+    return NULL;
+  }
+  
+  jbyteArray result = env->NewByteArray(65);
+  env->SetByteArrayRegion(result, 0, 65, (const jbyte *)sig);
+  free(sig);
+
+  return result;
+}
