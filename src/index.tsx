@@ -46,6 +46,11 @@ type bip39Type = {
   validateMnemonic(mnemonic: string): Boolean;
 };
 
+type signType = {
+  signature: Buffer;
+  recid: number;
+};
+
 type secp256k1Type = {
   randomPrivate(): Buffer;
   validatePublic(pub: Buffer): Boolean;
@@ -64,8 +69,8 @@ type secp256k1Type = {
     hashfn?: HASH | undefined
   ): Buffer;
   verify(pub: Buffer, sig: Buffer, digest: Buffer): Boolean;
-  sign(priv: Buffer, digest: Buffer): Promise<Buffer>;
-  signSync(priv: Buffer, digest: Buffer): Buffer;
+  sign(priv: Buffer, digest: Buffer): Promise<signType>;
+  signSync(priv: Buffer, digest: Buffer): signType;
 };
 
 const { CryptoLib: CryptoLibNative } = NativeModules;
@@ -242,7 +247,11 @@ export const secp256k1 = {
       priv.toString('base64'),
       digest.toString('base64')
     ).then((result: string) => {
-      return Buffer.from(result, 'base64');
+      const sig = Buffer.from(result, 'base64');
+      return {
+        signature: sig.slice(1),
+        recid: Number(sig[0]),
+      } as signType;
     });
   },
   signSync: (priv: Buffer, digest: Buffer) => {
@@ -255,7 +264,11 @@ export const secp256k1 = {
       throw new Error('recover error');
     }
 
-    return Buffer.from(result, 'base64');
+    const sig = Buffer.from(result, 'base64');
+    return {
+      signature: sig.slice(1),
+      recid: Number(sig[0]),
+    } as signType;
   },
 } as secp256k1Type;
 
