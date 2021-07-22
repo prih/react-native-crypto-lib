@@ -438,4 +438,132 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   return [result base64EncodedStringWithOptions:0];
 }
 
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  ecdsaEcdh:(NSString *)pub
+  withPriv:(NSString *)priv
+)
+{
+  NSData *raw_pub = [[NSData alloc]initWithBase64EncodedString:pub options:0];
+  NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
+
+  if ([raw_pub length] != 33 || [raw_pub length] != 65) {
+    @throw [NSException exceptionWithName:@"keySizeError" reason:@"wrong key size" userInfo:nil];
+  }
+
+  if ([raw_priv length] != 32) {
+    @throw [NSException exceptionWithName:@"keySizeError" reason:@"wrong key size" userInfo:nil];
+  }
+
+  uint8_t *ecdh = (uint8_t *) malloc(65);
+  int err = ecdh_multiply(&secp256k1, [raw_priv bytes], [raw_pub bytes], ecdh);
+
+  if (err > 0) {
+    free(ecdh);
+    @throw [NSException exceptionWithName:@"ecdhError" reason:@"ecdh error" userInfo:nil];
+  }
+
+  NSData *result = [NSData dataWithBytes:ecdh length:65];
+  free(ecdh);
+
+  return [result base64EncodedStringWithOptions:0];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  ecdsaVerify:(NSString *)pub
+  withSig:(NSString *)sig
+  withDigest:(NSString *)digest
+)
+{
+  NSData *raw_pub = [[NSData alloc]initWithBase64EncodedString:pub options:0];
+  NSData *raw_sig = [[NSData alloc]initWithBase64EncodedString:sig options:0];
+  NSData *raw_digest = [[NSData alloc]initWithBase64EncodedString:digest options:0];
+
+  if ([raw_pub length] != 33 || [raw_pub length] != 65) {
+    @throw [NSException exceptionWithName:@"keySizeError" reason:@"wrong key size" userInfo:nil];
+  }
+
+  if ([raw_sig length] != 64) {
+    @throw [NSException exceptionWithName:@"sigSizeError" reason:@"wrong sig size" userInfo:nil];
+  }
+
+  if ([raw_digest length] != 32) {
+    @throw [NSException exceptionWithName:@"digestSizeError" reason:@"wrong digest size" userInfo:nil];
+  }
+
+  int err = ecdsa_verify_digest(&secp256k1, [raw_pub bytes], [raw_sig bytes], [raw_digest bytes]);
+
+  if (err != 0) {
+    return [NSNumber numberWithInt: 0];
+  }
+
+  return [NSNumber numberWithInt: 1];
+}
+
+RCT_EXPORT_METHOD(
+  ecdsaSign:(NSString *)priv
+  withDigest:(NSString *)digest
+  resolver:(RCTPromiseResolveBlock)resolve
+  rejecter:(RCTPromiseRejectBlock)reject
+)
+{
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
+    NSData *raw_digest = [[NSData alloc]initWithBase64EncodedString:digest options:0];
+
+    if ([raw_priv length] != 32) {
+      reject(@"Error", @"wrong priv size", nil);
+      return;
+    }
+
+    if ([raw_digest length] != 32) {
+      reject(@"Error", @"wrong digest size", nil);
+      return;
+    }
+
+    uint8_t *sig = (uint8_t *) malloc(65);
+    int err = ecdsa_sign_digest(&secp256k1, [raw_priv bytes], [raw_digest bytes], sig + 1, sig, 0);
+
+    if (err > 0) {
+      free(sig);
+      reject(@"Error", @"sign error", nil);
+      return;
+    }
+
+    NSData *result = [NSData dataWithBytes:sig length:65];
+    free(sig);
+
+    resolve([result base64EncodedStringWithOptions:0]);
+  });
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  ecdsaSignSync:(NSString *)priv
+  withDigest:(NSString *)digest
+)
+{
+  NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
+  NSData *raw_digest = [[NSData alloc]initWithBase64EncodedString:digest options:0];
+
+  if ([raw_priv length] != 32) {
+    @throw [NSException exceptionWithName:@"privSizeError" reason:@"wrong priv size" userInfo:nil];
+  }
+
+  if ([raw_digest length] != 32) {
+    @throw [NSException exceptionWithName:@"digestSizeError" reason:@"wrong digest size" userInfo:nil];
+  }
+
+  uint8_t *sig = (uint8_t *) malloc(65);
+  int err = ecdsa_sign_digest(&secp256k1, [raw_priv bytes], [raw_digest bytes], sig + 1, sig, 0);
+
+  if (err > 0) {
+    free(sig);
+    @throw [NSException exceptionWithName:@"signError" reason:@"sign error" userInfo:nil];
+  }
+
+  NSData *result = [NSData dataWithBytes:sig length:65];
+  free(sig);
+
+  return [result base64EncodedStringWithOptions:0];
+}
+
 @end
