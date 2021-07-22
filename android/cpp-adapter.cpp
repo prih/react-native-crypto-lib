@@ -388,7 +388,7 @@ Java_com_reactnativecryptolib_CryptoLibModule_ecdsaRecoverNative(
   const jbyteArray sig,
   const jbyteArray digest,
   const jint recid,
-  const jint compress
+  const jint compact
 ) {
   jsize sig_length = env->GetArrayLength(sig);
   if (sig_length != 64) {
@@ -417,26 +417,26 @@ Java_com_reactnativecryptolib_CryptoLibModule_ecdsaRecoverNative(
     return NULL;
   }
 
-  if (compress == 0) {
+  if (compact == 0) {
     jbyteArray result = env->NewByteArray(65);
     env->SetByteArrayRegion(result, 0, 65, (const jbyte *)pub);
     free(pub);
     return result;
   } else {
-    uint8_t *pub_key = (uint8_t *) malloc(33);
+    uint8_t *pub_compact = (uint8_t *) malloc(33);
 
     curve_point p = {};
     bn_read_be(pub + 1, &(p.x));
     bn_read_be(pub + 33, &(p.y));
 
-    pub_key[0] = 0x02 | (p.y.val[0] & 0x01);
-    bn_write_be(&p.x, pub_key + 1);
+    pub_compact[0] = 0x02 | (p.y.val[0] & 0x01);
+    bn_write_be(&p.x, pub_compact + 1);
     memzero(&p, sizeof(p));
 
     jbyteArray result = env->NewByteArray(33);
-    env->SetByteArrayRegion(result, 0, 33, (const jbyte *)pub_key);
+    env->SetByteArrayRegion(result, 0, 33, (const jbyte *)pub_compact);
     free(pub);
-    free(pub_key);
+    free(pub_compact);
 
     return result;
   }
@@ -448,7 +448,8 @@ Java_com_reactnativecryptolib_CryptoLibModule_ecdsaEcdhNative(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
   const jbyteArray pub,
-  const jbyteArray priv
+  const jbyteArray priv,
+  const jint compact
 ) {
   jsize pub_length = env->GetArrayLength(pub);
   if (pub_length != 33 && pub_length != 65) {
@@ -471,11 +472,29 @@ Java_com_reactnativecryptolib_CryptoLibModule_ecdsaEcdhNative(
     return NULL;
   }
   
-  jbyteArray result = env->NewByteArray(65);
-  env->SetByteArrayRegion(result, 0, 65, (const jbyte *)ecdh);
-  free(ecdh);
+  if (compact == 0) {
+    jbyteArray result = env->NewByteArray(65);
+    env->SetByteArrayRegion(result, 0, 65, (const jbyte *)ecdh);
+    free(ecdh);
+    return result;
+  } else {
+    uint8_t *ecdh_compact = (uint8_t *) malloc(33);
 
-  return result;
+    curve_point p = {};
+    bn_read_be(ecdh + 1, &(p.x));
+    bn_read_be(ecdh + 33, &(p.y));
+
+    ecdh_compact[0] = 0x02 | (p.y.val[0] & 0x01);
+    bn_write_be(&p.x, ecdh_compact + 1);
+    memzero(&p, sizeof(p));
+
+    jbyteArray result = env->NewByteArray(33);
+    env->SetByteArrayRegion(result, 0, 33, (const jbyte *)ecdh_compact);
+    free(ecdh);
+    free(ecdh_compact);
+
+    return result;
+  }
 }
 
 extern "C"

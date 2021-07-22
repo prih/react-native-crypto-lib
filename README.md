@@ -8,6 +8,12 @@ crypto lib based on [trezor-firmware](https://github.com/trezor/trezor-firmware/
 npm install react-native-crypto-lib
 ```
 
+### iOS
+
+```sh
+cd ios && pod install && cd -
+```
+
 ## Usage
 
 ```js

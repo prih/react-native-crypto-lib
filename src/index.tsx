@@ -50,14 +50,19 @@ type secp256k1Type = {
   randomPrivate(): Buffer;
   validatePublic(pub: Buffer): Boolean;
   validatePrivate(priv: Buffer): Boolean;
-  getPublic(priv: Buffer, compress?: Boolean): Buffer;
+  getPublic(priv: Buffer, compact?: Boolean): Buffer;
   recover(
     sig: Buffer,
     digest: Buffer,
     recid: number,
-    compress?: Boolean
+    compact?: Boolean
   ): Buffer;
-  ecdh(pub: Buffer, priv: Buffer): Buffer;
+  ecdh(
+    pub: Buffer,
+    priv: Buffer,
+    compact?: Boolean,
+    hashfn?: HASH | undefined
+  ): Buffer;
   verify(pub: Buffer, sig: Buffer, digest: Buffer): Boolean;
   sign(priv: Buffer, digest: Buffer): Promise<Buffer>;
   signSync(priv: Buffer, digest: Buffer): Buffer;
@@ -169,9 +174,9 @@ export const secp256k1 = {
     );
     return result === 1;
   },
-  getPublic: (priv: Buffer, compress: Boolean = true) => {
+  getPublic: (priv: Buffer, compact: Boolean = true) => {
     let result = null;
-    if (compress) {
+    if (compact) {
       result = CryptoLibNative.ecdsaGetPublic33(priv.toString('base64'));
     } else {
       result = CryptoLibNative.ecdsaGetPublic65(priv.toString('base64'));
@@ -187,13 +192,13 @@ export const secp256k1 = {
     sig: Buffer,
     digest: Buffer,
     recid: number,
-    compress: Boolean = true
+    compact: Boolean = true
   ) => {
     const result = CryptoLibNative.ecdsaRecover(
       sig.toString('base64'),
       digest.toString('base64'),
       recid,
-      compress ? 1 : 0
+      compact ? 1 : 0
     );
 
     if (!result) {
@@ -202,17 +207,27 @@ export const secp256k1 = {
 
     return Buffer.from(result, 'base64');
   },
-  ecdh: (pub: Buffer, priv: Buffer) => {
+  ecdh: (
+    pub: Buffer,
+    priv: Buffer,
+    compact: Boolean = true,
+    hashfn = HASH.SHA256
+  ) => {
     const result = CryptoLibNative.ecdsaEcdh(
       pub.toString('base64'),
-      priv.toString('base64')
+      priv.toString('base64'),
+      compact ? 1 : 0
     );
 
     if (!result) {
       throw new Error('recover error');
     }
 
-    return Buffer.from(result, 'base64');
+    if (hashfn === undefined) {
+      return Buffer.from(result, 'base64');
+    }
+
+    return CryptoLib.hash(hashfn, result);
   },
   verify: (pub: Buffer, sig: Buffer, digest: Buffer) => {
     const result = CryptoLibNative.ecdsaVerify(

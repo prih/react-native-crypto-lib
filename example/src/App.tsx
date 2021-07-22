@@ -72,19 +72,24 @@ export default function App() {
 
           console.log(is_valid_priv, is_valid33, is_valid65);
 
-          const pub_rec = secp256k1.recover(
+          const ecdh = secp256k1.ecdh(
             Buffer.from(
-              '320d39ee6258f6b912307994ba603b9522ead3af2790b0eed23e6cade7d86125099300e015a6acaff1a9dbd96d57a1892e47d76211d13e6f235fd1a26e3c5c09',
+              '03efd6b90f8196dda6478811d72f033420fb9aa503c69b5264304d78c4147786b4',
               'hex'
             ),
             Buffer.from(
-              '423840043a1d6ec96381259c34b66cc98264b3ebe3b663c12a888705a588496e',
+              '314f788194461bdf6bc214a7e287a313c7be4b4326bf7e773aa1c7c41aca0789',
               'hex'
             ),
-            0,
             true
           );
-          console.log(pub_rec.toString('hex'));
+          // const x = ecdh.slice(1, 33);
+          // const y = ecdh.slice(33);
+
+          // console.log(x.toString('hex'));
+          // console.log(y.toString('hex'));
+
+          console.log(ecdh.toString('hex'));
         }}
       />
       <Text>Result Native: {result_time1}</Text>

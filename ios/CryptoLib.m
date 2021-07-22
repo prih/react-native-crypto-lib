@@ -392,7 +392,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   ecdsaRecover:(NSString *)sig
   withDigest:(NSString *)digest
   withRecid:(int)recid
-  withCompress:(int)compress
+  withCompact:(int)compact
 )
 {
   NSData *raw_sig = [[NSData alloc]initWithBase64EncodedString:sig options:0];
@@ -416,23 +416,23 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 
   NSData *result;
 
-  if (compress == 0) {
+  if (compact == 0) {
     result = [NSData dataWithBytes:pub length:65];
     free(pub);
   } else {
-    uint8_t *pub_key = (uint8_t *) malloc(33);
+    uint8_t *pub_compact = (uint8_t *) malloc(33);
 
     curve_point p = {0};
     bn_read_be(pub + 1, &(p.x));
     bn_read_be(pub + 33, &(p.y));
 
-    pub_key[0] = 0x02 | (p.y.val[0] & 0x01);
-    bn_write_be(&p.x, pub_key + 1);
+    pub_compact[0] = 0x02 | (p.y.val[0] & 0x01);
+    bn_write_be(&p.x, pub_compact + 1);
     memzero(&p, sizeof(p));
 
-    result = [NSData dataWithBytes:pub_key length:33];
+    result = [NSData dataWithBytes:pub_compact length:33];
     free(pub);
-    free(pub_key);
+    free(pub_compact);
   }
 
   return [result base64EncodedStringWithOptions:0];
@@ -441,6 +441,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   ecdsaEcdh:(NSString *)pub
   withPriv:(NSString *)priv
+  withCompact:(int)compact
 )
 {
   NSData *raw_pub = [[NSData alloc]initWithBase64EncodedString:pub options:0];
@@ -462,8 +463,26 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
     @throw [NSException exceptionWithName:@"ecdhError" reason:@"ecdh error" userInfo:nil];
   }
 
-  NSData *result = [NSData dataWithBytes:ecdh length:65];
-  free(ecdh);
+  NSData *result;
+
+  if (compact == 0) {
+    result = [NSData dataWithBytes:ecdh length:65];
+    free(ecdh);
+  } else {
+    uint8_t *ecdh_compact = (uint8_t *) malloc(33);
+
+    curve_point p = {0};
+    bn_read_be(ecdh + 1, &(p.x));
+    bn_read_be(ecdh + 33, &(p.y));
+
+    ecdh_compact[0] = 0x02 | (p.y.val[0] & 0x01);
+    bn_write_be(&(p.x), ecdh_compact + 1);
+    memzero(&p, sizeof(p));
+
+    result = [NSData dataWithBytes:ecdh_compact length:33];
+    free(ecdh);
+    free(ecdh_compact);
+  }
 
   return [result base64EncodedStringWithOptions:0];
 }
