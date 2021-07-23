@@ -9,6 +9,8 @@ typedef enum {
   KECCAK_256,
   KECCAK_512,
   RIPEMD160,
+  HASH256,
+  HASH160
 } HASH_TYPE;
 
 typedef enum {

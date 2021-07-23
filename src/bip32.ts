@@ -15,16 +15,8 @@ type HDNodeData = {
   chain_code: Buffer;
   private_key: Buffer;
   public_key: Buffer;
-  fingerprint: number;
+  fingerprint: Buffer;
 };
-
-// type NETWORK_TYPE = {
-//   wif: number;
-//   bip32: {
-//     public: number;
-//     private: number;
-//   };
-// };
 
 // function debugPrint(data: HDNodeData) {
 //   console.log('----->');
@@ -53,18 +45,12 @@ const bip32Native = {
       chain_code: data.slice(8, 40),
       private_key: data.slice(40, 72),
       public_key: data.slice(72, 105),
-      fingerprint: data.slice(105, 109).readUInt32LE(),
+      fingerprint: data.slice(105, 109),
     } as HDNodeData;
-
-    // console.log('fromSeed');
-    // debugPrint(hdnode_data);
 
     return hdnode_data;
   },
   derive: (data: HDNodeData, i: number = 0, type = DERIVE.PRIVATE) => {
-    // console.log('derive index:', i);
-    // debugPrint(data);
-
     const depth = Buffer.alloc(4);
     depth.writeUInt32LE(data.depth);
     const child_num = Buffer.alloc(4);
@@ -76,7 +62,7 @@ const bip32Native = {
       data.chain_code,
       data.private_key,
       data.public_key,
-      Buffer.alloc(4, 0),
+      data.fingerprint,
     ]);
 
     const result = CryptoLibNative.hdNodeDerive(
@@ -97,27 +83,12 @@ const bip32Native = {
       chain_code: new_data.slice(8, 40),
       private_key: new_data.slice(40, 72),
       public_key: new_data.slice(72, 105),
-      fingerprint: new_data.slice(105, 109).readUInt32LE(),
+      fingerprint: new_data.slice(105, 109),
     } as HDNodeData;
-
-    // console.log('derive out');
-    // debugPrint(hdnode_data);
 
     return hdnode_data;
   },
 };
-
-// const BITCOIN = {
-//   messagePrefix: '\x18Bitcoin Signed Message:\n',
-//   bech32: 'bc',
-//   bip32: {
-//     public: 0x0488b21e,
-//     private: 0x0488ade4,
-//   },
-//   pubKeyHash: 0x00,
-//   scriptHash: 0x05,
-//   wif: 0x80,
-// } as NETWORK_TYPE;
 
 const HIGHEST_BIT = 0x80000000;
 const UINT31_MAX = Math.pow(2, 31) - 1;
@@ -137,26 +108,23 @@ export class BIP32 {
   private __D: Buffer | undefined;
   private __Q: Buffer | undefined;
   private chainCode: Buffer;
-  // private network: NETWORK_TYPE;
   private __DEPTH: number;
   private __INDEX: number;
-  private __PARENT_FINGERPRINT: number;
-  private __FINGERPRINT: number;
+  private __PARENT_FINGERPRINT: Buffer | undefined;
+  private __FINGERPRINT: Buffer | undefined;
 
   constructor(
     __D: Buffer | undefined,
     __Q: Buffer | undefined,
     chainCode: Buffer,
-    // network: NETWORK_TYPE = BITCOIN,
     __DEPTH = 0,
     __INDEX = 0,
-    __PARENT_FINGERPRINT = 0,
-    __FINGERPRINT = 0
+    __PARENT_FINGERPRINT: Buffer | undefined,
+    __FINGERPRINT: Buffer | undefined
   ) {
     this.__D = __D;
     this.__Q = __Q;
     this.chainCode = chainCode;
-    // this.network = network;
     this.__DEPTH = __DEPTH;
     this.__INDEX = __INDEX;
     this.__PARENT_FINGERPRINT = __PARENT_FINGERPRINT;
@@ -183,11 +151,8 @@ export class BIP32 {
   }
   get fingerprint() {
     if (!this.__FINGERPRINT && this.publicKey) {
-      const id = hash.createHash(
-        'ripemd160',
-        hash.createHash('sha256', this.publicKey)
-      );
-      this.__FINGERPRINT = id.slice(0, 4).readUInt32LE();
+      const id = hash.createHash('hash160', this.publicKey);
+      this.__FINGERPRINT = id.slice(0, 4);
     }
     return this.__FINGERPRINT;
   }
@@ -263,7 +228,7 @@ export class BIP32 {
           chain_code: this.chainCode,
           private_key: this.__D || Buffer.alloc(32, 0),
           public_key: Buffer.alloc(33, 0),
-          fingerprint: 0,
+          fingerprint: this.fingerprint || Buffer.alloc(4, 0),
         },
         index,
         DERIVE.PRIVATE
@@ -273,7 +238,6 @@ export class BIP32 {
         data.private_key,
         data.public_key,
         data.chain_code,
-        // this.network,
         data.depth,
         data.child_num,
         this.fingerprint,
@@ -290,7 +254,7 @@ export class BIP32 {
             chain_code: this.chainCode,
             private_key: this.__D || Buffer.alloc(32, 0),
             public_key: this.__Q || Buffer.alloc(33, 0),
-            fingerprint: 0,
+            fingerprint: this.fingerprint || Buffer.alloc(4, 0),
           },
           index,
           DERIVE.PRIVATE
@@ -303,7 +267,7 @@ export class BIP32 {
             chain_code: this.chainCode,
             private_key: Buffer.alloc(32, 0),
             public_key: this.__Q || Buffer.alloc(33, 0),
-            fingerprint: 0,
+            fingerprint: this.fingerprint || Buffer.alloc(4, 0),
           },
           index,
           DERIVE.PUBLIC
@@ -314,7 +278,6 @@ export class BIP32 {
         data.private_key,
         data.public_key,
         data.chain_code,
-        // this.network,
         data.depth,
         data.child_num,
         this.fingerprint,
@@ -379,18 +342,15 @@ export function fromKeyLocal(
   privateKey: Buffer | undefined,
   publicKey: Buffer | undefined,
   chainCode: Buffer,
-  // network: NETWORK_TYPE,
   depth: number,
   index: number,
-  parentFingerprint: number = 0,
-  fingerprint: number = 0
+  parentFingerprint: Buffer | undefined,
+  fingerprint: Buffer | undefined
 ) {
-  // network = network || BITCOIN;
   return new BIP32(
     privateKey,
     publicKey,
     chainCode,
-    // network,
     depth,
     index,
     parentFingerprint,
@@ -405,10 +365,9 @@ export function fromSeed(seed: Buffer) {
     data.private_key,
     data.public_key,
     data.chain_code,
-    // network,
     data.depth,
     data.child_num,
-    0,
+    undefined,
     data.fingerprint
   );
 }

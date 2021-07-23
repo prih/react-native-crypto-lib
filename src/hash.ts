@@ -11,6 +11,8 @@ const HASH_TYPE = {
   keccak512: 6,
   ripemd160: 7,
   rmd160: 7,
+  hash256: 8,
+  hash160: 9,
 } as {
   [key: string]: number;
 };

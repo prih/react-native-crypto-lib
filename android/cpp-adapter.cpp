@@ -25,6 +25,8 @@ enum HASH_TYPE {
   KECCAK_256,
   KECCAK_512,
   RIPEMD160,
+  HASH256,
+  HASH160
 };
 
 enum DERIVE_TYPE {
@@ -108,6 +110,20 @@ Java_com_reactnativecryptolib_CryptoLibModule_hashNative(
       hash_length = RIPEMD160_DIGEST_LENGTH;
       hash = (jbyte *) malloc(hash_length);
       ripemd160(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
+      break;
+    case HASH256:
+      hash_length = SHA256_DIGEST_LENGTH;
+      hash = (jbyte *) malloc(hash_length);
+      sha256_Raw(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
+      sha256_Raw(reinterpret_cast<uint8_t *>(hash), hash_length, reinterpret_cast<uint8_t *>(hash));
+      break;
+    case HASH160:
+      hash_length = RIPEMD160_DIGEST_LENGTH;
+      hash = (jbyte *) malloc(hash_length);
+      uint8_t tmp[SHA256_DIGEST_LENGTH];
+
+      sha256_Raw(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(&tmp));
+      ripemd160(reinterpret_cast<uint8_t *>(&tmp), SHA256_DIGEST_LENGTH, reinterpret_cast<uint8_t *>(hash));
       break;
     
     default:

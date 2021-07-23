@@ -101,6 +101,20 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
       ripemd160([raw_data bytes], (uint32_t)[raw_data length], hash);
       result = [NSData dataWithBytes:hash length:RIPEMD160_DIGEST_LENGTH];
       break;
+    case HASH256:
+      hash = (uint8_t *) malloc(SHA256_DIGEST_LENGTH);
+      sha256_Raw([raw_data bytes], [raw_data length], hash);
+      sha256_Raw(hash, SHA256_DIGEST_LENGTH, hash);
+      result = [NSData dataWithBytes:hash length:SHA256_DIGEST_LENGTH];
+      break;
+    case HASH160:
+      hash = (uint8_t *) malloc(RIPEMD160_DIGEST_LENGTH);
+      uint8_t tmp[SHA256_DIGEST_LENGTH];
+
+      sha256_Raw([raw_data bytes], [raw_data length], (uint8_t *)&tmp);
+      ripemd160((uint8_t *)&tmp, SHA256_DIGEST_LENGTH, hash);
+      result = [NSData dataWithBytes:hash length:RIPEMD160_DIGEST_LENGTH];
+      break;
     
     default:
       return nil;
