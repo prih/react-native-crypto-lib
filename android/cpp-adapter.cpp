@@ -587,21 +587,21 @@ typedef struct {
 void hdnode_read_data(HDNode *node, HDNodeData *data) {
   uint32_t fp = hdnode_fingerprint(node);
 
-  memcpy(&data->depth, &node->depth, sizeof(node->depth));
-  memcpy(&data->child_num, &node->child_num, sizeof(node->child_num));
-  memcpy(&data->chain_code, &node->chain_code, sizeof(node->chain_code));
-  memcpy(&data->private_key, &node->private_key, sizeof(node->private_key));
-  memcpy(&data->public_key, &node->public_key, sizeof(node->public_key));
-  memcpy(&data->fingerprint, &fp, sizeof(fp));
+  memcpy(&(data->depth), &(node->depth), sizeof(node->depth));
+  memcpy(&(data->child_num), &(node->child_num), sizeof(node->child_num));
+  memcpy(&(data->chain_code), &(node->chain_code), sizeof(node->chain_code));
+  memcpy(&(data->private_key), &(node->private_key), sizeof(node->private_key));
+  memcpy(&(data->public_key), &(node->public_key), sizeof(node->public_key));
+  memcpy(&(data->fingerprint), &fp, sizeof(fp));
   fp = 0;
 }
 
 void hdnode_write_data(HDNode *node, HDNodeData *data) {
-  memcpy(&node->depth, &data->depth, sizeof(node->depth));
-  memcpy(&node->child_num, &data->child_num, sizeof(node->child_num));
-  memcpy(&node->chain_code, &data->chain_code, sizeof(node->chain_code));
-  memcpy(&node->private_key, &data->private_key, sizeof(node->private_key));
-  memcpy(&node->public_key, &data->public_key, sizeof(node->public_key));
+  memcpy(&(node->depth), &(data->depth), sizeof(node->depth));
+  memcpy(&(node->child_num), &(data->child_num), sizeof(node->child_num));
+  memcpy(&(node->chain_code), &(data->chain_code), sizeof(node->chain_code));
+  memcpy(&(node->private_key), &(data->private_key), sizeof(node->private_key));
+  memcpy(&(node->public_key), &(data->public_key), sizeof(node->public_key));
 }
 
 extern "C"

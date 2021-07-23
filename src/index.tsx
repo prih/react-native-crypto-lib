@@ -300,10 +300,11 @@ export const bip32 = {
     }
 
     const data = Buffer.from(result, 'base64');
+    // console.log(data.length, data.toString('hex'));
 
     return {
-      depth: data.slice(0, 4).readUInt32BE(),
-      child_num: data.slice(4, 8).readUInt32BE(),
+      depth: data.slice(0, 4).readUInt32LE(),
+      child_num: data.slice(4, 8).readUInt32LE(),
       chain_code: data.slice(8, 40),
       private_key: data.slice(40, 72),
       public_key: data.slice(72, 105),
@@ -336,10 +337,11 @@ export const bip32 = {
     }
 
     const new_data = Buffer.from(result, 'base64');
+    // console.log(new_data.length, new_data.toString('hex'));
 
     return {
-      depth: new_data.slice(0, 4).readUInt32BE(),
-      child_num: new_data.slice(4, 8).readUInt32BE(),
+      depth: new_data.slice(0, 4).readUInt32LE(),
+      child_num: new_data.slice(4, 8).readUInt32LE(),
       chain_code: new_data.slice(8, 40),
       private_key: new_data.slice(40, 72),
       public_key: new_data.slice(72, 105),
