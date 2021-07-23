@@ -46,6 +46,12 @@ const keccak_512_buffer = hash.createHash('keccak512', data);
 const ripemd160_buffer = hash.createHash('ripemd160', data);
 const ripemd160_buffer = hash.createHash('rmd160', data);
 
+// hash256
+const hash256_buffer = hash.createHash('hash256', data);
+
+// hash160
+const hash160_buffer = hash.createHash('hash160', data);
+
 // HMAC
 const hmac256_buffer = hash.createHmac('sha256', key, data);
 const hmac512_buffer = hash.createHmac('sha512', key, data);
