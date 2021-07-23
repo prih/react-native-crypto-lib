@@ -4,7 +4,7 @@ import * as hash from './hash';
 
 const { CryptoLib: CryptoLibNative } = NativeModules;
 
-export enum DERIVE {
+enum DERIVE {
   PRIVATE = 0,
   PUBLIC = 1,
 }
@@ -184,8 +184,8 @@ export class BIP32 {
   get fingerprint() {
     if (!this.__FINGERPRINT && this.publicKey) {
       const id = hash.createHash(
-        hash.HASH_TYPE.RIPEMD160,
-        hash.createHash(hash.HASH_TYPE.SHA256, this.publicKey)
+        'ripemd160',
+        hash.createHash('sha256', this.publicKey)
       );
       this.__FINGERPRINT = id.slice(0, 4).readUInt32LE();
     }

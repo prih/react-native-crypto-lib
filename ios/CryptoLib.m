@@ -16,27 +16,6 @@
 
 @implementation CryptoLib
 
-typedef enum {
-  SHA1,
-  SHA256,
-  SHA512,
-  SHA3_256,
-  SHA3_512,
-  KECCAK_256,
-  KECCAK_512,
-  RIPEMD160,
-} HASH_TYPE;
-
-typedef enum {
-  HMAC_SHA256,
-  HMAC_SHA512
-} HMAC_TYPE;
-
-typedef enum {
-  DERIVE_PRIVATE,
-  DERIVE_PUBLIC
-} DERIVE_TYPE;
-
 RCT_EXPORT_MODULE()
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(randomNumber)
@@ -144,12 +123,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   NSData *result;
 
   switch(algorithm){
-    case HMAC_SHA256:
+    case SHA256:
       hmac = (uint8_t *) malloc(SHA256_DIGEST_LENGTH);
       hmac_sha256([raw_key bytes], (uint32_t)[raw_key length], [raw_data bytes], (uint32_t)[raw_data length], hmac);
       result = [NSData dataWithBytes:hmac length:SHA256_DIGEST_LENGTH];
       break;
-    case HMAC_SHA512:
+    case SHA512:
       hmac = (uint8_t *) malloc(SHA512_DIGEST_LENGTH);
       hmac_sha512([raw_key bytes], (uint32_t)[raw_key length], [raw_data bytes], (uint32_t)[raw_data length], hmac);
       result = [NSData dataWithBytes:hmac length:SHA512_DIGEST_LENGTH];
@@ -180,7 +159,7 @@ RCT_EXPORT_METHOD(
     NSData *result;
 
     switch(algorithm){
-      case HMAC_SHA256:
+      case SHA256:
         hash = (uint8_t *) malloc(keyLength);
         pbkdf2_hmac_sha256(
           [raw_pass bytes], (uint32_t)[raw_pass length],
@@ -190,7 +169,7 @@ RCT_EXPORT_METHOD(
         );
         result = [NSData dataWithBytes:hash length:keyLength];
         break;
-      case HMAC_SHA512:
+      case SHA512:
         hash = (uint8_t *) malloc(keyLength);
         pbkdf2_hmac_sha512(
           [raw_pass bytes], (uint32_t)[raw_pass length],
@@ -225,7 +204,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   NSData *result;
 
   switch(algorithm){
-    case HMAC_SHA256:
+    case SHA256:
       hash = (uint8_t *) malloc(keyLength);
       pbkdf2_hmac_sha256(
         [raw_pass bytes], (uint32_t)[raw_pass length],
@@ -235,7 +214,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
       );
       result = [NSData dataWithBytes:hash length:keyLength];
       break;
-    case HMAC_SHA512:
+    case SHA512:
       hash = (uint8_t *) malloc(keyLength);
       pbkdf2_hmac_sha512(
         [raw_pass bytes], (uint32_t)[raw_pass length],

@@ -27,11 +27,6 @@ enum HASH_TYPE {
   RIPEMD160,
 };
 
-enum HMAC_TYPE {
-  HMAC_SHA256,
-  HMAC_SHA512,
-};
-
 enum DERIVE_TYPE {
   DERIVE_PRIVATE,
   DERIVE_PUBLIC,
@@ -147,7 +142,7 @@ Java_com_reactnativecryptolib_CryptoLibModule_hmacNative(
 
   switch (algorithm)
   {
-    case HMAC_SHA256:
+    case SHA256:
       hash_length = SHA256_DIGEST_LENGTH;
       hash = (jbyte *) malloc(hash_length);
       hmac_sha256(
@@ -156,7 +151,7 @@ Java_com_reactnativecryptolib_CryptoLibModule_hmacNative(
         reinterpret_cast<uint8_t *>(hash)
       );
       break;
-    case HMAC_SHA512:
+    case SHA512:
       hash_length = SHA512_DIGEST_LENGTH;
       hash = (jbyte *) malloc(hash_length);
       hmac_sha512(
@@ -199,7 +194,7 @@ Java_com_reactnativecryptolib_CryptoLibModule_pbkdf2Native(
 
   switch (algorithm)
   {
-    case HMAC_SHA256:
+    case SHA256:
       pbkdf2_hmac_sha256(
         reinterpret_cast<uint8_t *>(raw_pass), pass_length,
         reinterpret_cast<uint8_t *>(raw_salt), salt_length,
@@ -207,7 +202,7 @@ Java_com_reactnativecryptolib_CryptoLibModule_pbkdf2Native(
         reinterpret_cast<uint8_t *>(hash), keyLength
       );
       break;
-    case HMAC_SHA512:
+    case SHA512:
       pbkdf2_hmac_sha512(
         reinterpret_cast<uint8_t *>(raw_pass), pass_length,
         reinterpret_cast<uint8_t *>(raw_salt), salt_length,

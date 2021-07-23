@@ -34,7 +34,7 @@ type secp256k1Type = {
     pub: Buffer,
     priv: Buffer,
     compact?: Boolean,
-    hashfn?: hash.HASH_TYPE | undefined
+    hashfn?: string | undefined
   ): Buffer;
   verify(pub: Buffer, sig: Buffer, digest: Buffer): Boolean;
   sign(priv: Buffer, digest: Buffer): Promise<signType>;
@@ -121,7 +121,7 @@ export const secp256k1 = {
     pub: Buffer,
     priv: Buffer,
     compact: Boolean = true,
-    hashfn = hash.HASH_TYPE.SHA256
+    hashfn = 'sha256'
   ) => {
     const result = CryptoLibNative.ecdsaEcdh(
       pub.toString('base64'),

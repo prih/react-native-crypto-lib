@@ -32,30 +32,31 @@ const random_buffer = await rand.randomBytes(32);
 const random_buffer = rand.randomBytesSync(32);
 
 // sha2
-const sha1_buffer = hash.createHash(hash.HASH_TYPE.SHA1, data);
-const sha256_buffer = hash.createHash(hash.HASH_TYPE.SHA256, data);
-const sha512_buffer = hash.createHash(hash.HASH_TYPE.SHA512, data);
+const sha1_buffer = hash.createHash('sha1', data);
+const sha256_buffer = hash.createHash('sha256', data);
+const sha512_buffer = hash.createHash('sha512', data);
 
 // sha3
-const sha3_256_buffer = hash.createHash(hash.HASH_TYPE.SHA3_256, data);
-const sha3_512_buffer = hash.createHash(hash.HASH_TYPE.SHA3_512, data);
-const keccak_256_buffer = hash.createHash(hash.HASH_TYPE.KECCAK_256, data);
-const keccak_512_buffer = hash.createHash(hash.HASH_TYPE.KECCAK_512, data);
+const sha3_256_buffer = hash.createHash('sha3_256', data);
+const sha3_512_buffer = hash.createHash('sha3_512', data);
+const keccak_256_buffer = hash.createHash('keccak256', data);
+const keccak_512_buffer = hash.createHash('keccak512', data);
 
 // ripemd160
-const ripemd160_buffer = hash.createHash(hash.HASH_TYPE.RIPEMD160, data);
+const ripemd160_buffer = hash.createHash('ripemd160', data);
+const ripemd160_buffer = hash.createHash('rmd160', data);
 
 // HMAC
-const hmac256_buffer = hash.createHmac(hash.HMAC_TYPE.SHA256, key, data);
-const hmac512_buffer = hash.createHmac(hash.HMAC_TYPE.SHA512, key, data);
+const hmac256_buffer = hash.createHmac('sha256', key, data);
+const hmac512_buffer = hash.createHmac('sha512', key, data);
 
 // pbkdf2
-const pbkdf2_256_buffer = await hash.pbkdf2(pass, salt, 10000, 32, hash.HMAC_TYPE.SHA256);
-const pbkdf2_512_buffer = await hash.pbkdf2(pass, salt, 10000, 32, hash.HMAC_TYPE.SHA512);
+const pbkdf2_256_buffer = await hash.pbkdf2(pass, salt, 10000, 32, 'sha256');
+const pbkdf2_512_buffer = await hash.pbkdf2(pass, salt, 10000, 32, 'sha512');
 
 // pbkdf2Sync
-const pbkdf2_256_buffer = hash.pbkdf2Sync(pass, salt, 10000, 32, hash.HMAC_TYPE.SHA256);
-const pbkdf2_512_buffer = hash.pbkdf2Sync(pass, salt, 10000, 32, hash.HMAC_TYPE.SHA512);
+const pbkdf2_256_buffer = hash.pbkdf2Sync(pass, salt, 10000, 32, 'sha256');
+const pbkdf2_512_buffer = hash.pbkdf2Sync(pass, salt, 10000, 32, 'sha512');
 
 // BIP39
 const seed_buffer = await bip39.mnemonicToSeed('words...', 'password (optional)');
