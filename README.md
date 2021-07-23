@@ -17,49 +17,45 @@ cd ios && pod install && cd -
 ## Usage
 
 ```js
-import CryptoLib, {
-  HASH,
-  HMAC,
+import {
+  rand,
+  hash,
   bip39,
-  secp256k1
+  secp256k1,
+  bip32
 } from 'react-native-crypto-lib';
-import { Buffer } from 'buffer';
 
 // ...
 
-const data = Buffer.from('Hello World', 'hex');
-
-const random_uint32 = CryptoLib.randomNumber();
-const random_buffer = await CryptoLib.randomBytes(32);
-const random_buffer = CryptoLib.randomBytesSync(32);
+const random_uint32 = rand.randomNumber();
+const random_buffer = await rand.randomBytes(32);
+const random_buffer = rand.randomBytesSync(32);
 
 // sha2
-const sha1_buffer = CryptoLib.hash(HASH.SHA1, data);
-const sha256_buffer = CryptoLib.hash(HASH.SHA256, data);
-const sha512_buffer = CryptoLib.hash(HASH.SHA512, data);
+const sha1_buffer = hash.createHash(hash.HASH_TYPE.SHA1, data);
+const sha256_buffer = hash.createHash(hash.HASH_TYPE.SHA256, data);
+const sha512_buffer = hash.createHash(hash.HASH_TYPE.SHA512, data);
 
 // sha3
-const sha3_256_buffer = CryptoLib.hash(HASH.SHA3_256, data);
-const sha3_512_buffer = CryptoLib.hash(HASH.SHA3_512, data);
-const keccak_256_buffer = CryptoLib.hash(HASH.KECCAK_256, data);
-const keccak_512_buffer = CryptoLib.hash(HASH.KECCAK_512, data);
+const sha3_256_buffer = hash.createHash(hash.HASH_TYPE.SHA3_256, data);
+const sha3_512_buffer = hash.createHash(hash.HASH_TYPE.SHA3_512, data);
+const keccak_256_buffer = hash.createHash(hash.HASH_TYPE.KECCAK_256, data);
+const keccak_512_buffer = hash.createHash(hash.HASH_TYPE.KECCAK_512, data);
 
 // ripemd160
-const ripemd160_buffer = CryptoLib.hash(HASH.RIPEMD160, data);
+const ripemd160_buffer = hash.createHash(hash.HASH_TYPE.RIPEMD160, data);
 
 // HMAC
-const hmac_key = Buffer.from('0102030405060708', 'hex');
-
-const hmac256_buffer = CryptoLib.hmac(HMAC.SHA256, hmac_key, data);
-const hmac512_buffer = CryptoLib.hmac(HMAC.SHA512, hmac_key, data);
+const hmac256_buffer = hash.createHmac(hash.HMAC_TYPE.SHA256, key, data);
+const hmac512_buffer = hash.createHmac(hash.HMAC_TYPE.SHA512, key, data);
 
 // pbkdf2
-const pbkdf2_256_buffer = await CryptoLib.pbkdf2('password', 'salt', 10000, 32, HMAC.SHA256);
-const pbkdf2_512_buffer = await CryptoLib.pbkdf2('password', 'salt', 10000, 32, HMAC.SHA512);
+const pbkdf2_256_buffer = await hash.pbkdf2(pass, salt, 10000, 32, hash.HMAC_TYPE.SHA256);
+const pbkdf2_512_buffer = await hash.pbkdf2(pass, salt, 10000, 32, hash.HMAC_TYPE.SHA512);
 
 // pbkdf2Sync
-const pbkdf2_256_buffer = CryptoLib.pbkdf2Sync('password', 'salt', 10000, 32, HMAC.SHA256);
-const pbkdf2_512_buffer = CryptoLib.pbkdf2Sync('password', 'salt', 10000, 32, HMAC.SHA512);
+const pbkdf2_256_buffer = hash.pbkdf2Sync(pass, salt, 10000, 32, hash.HMAC_TYPE.SHA256);
+const pbkdf2_512_buffer = hash.pbkdf2Sync(pass, salt, 10000, 32, hash.HMAC_TYPE.SHA512);
 
 // BIP39
 const seed_buffer = await bip39.mnemonicToSeed('words...', 'password (optional)');
@@ -67,7 +63,7 @@ const seed_buffer = bip39.mnemonicToSeedSync('words...', 'password (optional)');
 const mnemonic = bip39.generateMnemonic(24);
 const is_valid_mnemonic = bip39.validateMnemonic('words...');
 
-// secp256k1 ECDSA/ECDH
+// ECDSA/ECDH secp256k1
 const priv = secp256k1.randomPrivate();
 const is_valid_priv = secp256k1.validatePrivate(priv);
 const public33 = secp256k1.getPublic(priv);
@@ -83,6 +79,11 @@ const ecdh_xy = secp256k1.ecdh(pub, priv, false, undefined);
 const is_verif = secp256k1.verify(pub, sig, digest);
 const sig = await secp256k1.sign(priv, digest);
 const sig = secp256k1.signSync(priv, digest);
+
+// BIP32
+const node = bip32.fromSeed(seed_buffer);
+const node = bip32.fromKeyLocal(priv, pub, chain_code, depth, index, parentFingerprint);
+const addr = node.derivePath(`m/44'/0'/0'/0/0`);
 ```
 
 ## Contributing

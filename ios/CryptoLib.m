@@ -666,7 +666,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   }
 
   HDNodeData *data = (HDNodeData *)[raw_data bytes];
-  memzero((void *)[raw_data bytes], [raw_data length]);
 
   const char *curve = "secp256k1";
   HDNode node = {};

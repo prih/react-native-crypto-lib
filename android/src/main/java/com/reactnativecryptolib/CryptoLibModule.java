@@ -305,12 +305,12 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     public String hdNodeDerive(
       final int derive_type,
       final String node_data,
-      final int index
+      final double index
     ) {
       byte[] data = hdNodeDeriveNative(
         derive_type,
         Base64.decode(node_data, Base64.NO_PADDING),
-        index
+        (long)index
       );
       return Base64.encodeToString(data, Base64.NO_PADDING | Base64.NO_WRAP);
     }
@@ -333,5 +333,5 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     public static native int ecdsaVerifyNative(byte[] pub, byte[] sig, byte[] digest);
     public static native byte[] ecdsaSignNative(byte[] priv, byte[] digest);
     public static native byte[] hdNodeFromSeedNative(byte[] seed);
-    public static native byte[] hdNodeDeriveNative(int type, byte[] data, int index);
+    public static native byte[] hdNodeDeriveNative(int type, byte[] data, long index);
 }

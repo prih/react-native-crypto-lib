@@ -641,7 +641,7 @@ Java_com_reactnativecryptolib_CryptoLibModule_hdNodeDeriveNative(
   __attribute__((unused)) jclass type,
   const jint derive_type,
   const jbyteArray node_data,
-  const jint index
+  const jlong index
 ) {
   if (env->GetArrayLength(node_data) != sizeof(HDNodeData)) {
     return NULL;
@@ -670,8 +670,8 @@ Java_com_reactnativecryptolib_CryptoLibModule_hdNodeDeriveNative(
 
   hdnode_read_data(&node, data);
   
-  jbyteArray result = env->NewByteArray(sizeof(data));
-  env->SetByteArrayRegion(result, 0, sizeof(data), (const jbyte *)&data);
+  jbyteArray result = env->NewByteArray(sizeof(*data));
+  env->SetByteArrayRegion(result, 0, sizeof(*data), (const jbyte *)data);
 
   memzero(&node, sizeof(node));
   memzero(data, sizeof(HDNodeData));
