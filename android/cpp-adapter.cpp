@@ -306,7 +306,7 @@ Java_com_reactnativecryptolib_CryptoLibModule_ecdsaRandomPrivateNative(
 }
 
 extern "C"
-JNIEXPORT jint JNICALL
+JNIEXPORT jbyteArray JNICALL
 Java_com_reactnativecryptolib_CryptoLibModule_ecdsaReadPublicNative(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
