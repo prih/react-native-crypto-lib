@@ -51,6 +51,9 @@ const bip32Native = {
     return hdnode_data;
   },
   derive: (data: HDNodeData, i: number = 0, type = DERIVE.PRIVATE) => {
+    // console.log('derive:', i, type);
+    // debugPrint(data);
+
     const depth = Buffer.alloc(4);
     depth.writeUInt32LE(data.depth);
     const child_num = Buffer.alloc(4);
@@ -85,6 +88,9 @@ const bip32Native = {
       public_key: new_data.slice(72, 105),
       fingerprint: new_data.slice(105, 109).reverse(),
     } as HDNodeData;
+
+    // console.log('derive result:');
+    // debugPrint(hdnode_data);
 
     return hdnode_data;
   },
@@ -259,6 +265,16 @@ export class BIP32 {
           index,
           DERIVE.PRIVATE
         );
+
+        return fromKeyLocal(
+          data.private_key,
+          data.public_key,
+          data.chain_code,
+          data.depth,
+          data.child_num,
+          this.fingerprint,
+          data.fingerprint
+        );
       } else {
         data = bip32Native.derive(
           {
@@ -272,17 +288,17 @@ export class BIP32 {
           index,
           DERIVE.PUBLIC
         );
-      }
 
-      return fromKeyLocal(
-        data.private_key,
-        data.public_key,
-        data.chain_code,
-        data.depth,
-        data.child_num,
-        this.fingerprint,
-        data.fingerprint
-      );
+        return fromKeyLocal(
+          undefined,
+          data.public_key,
+          data.chain_code,
+          data.depth,
+          data.child_num,
+          this.fingerprint,
+          data.fingerprint
+        );
+      }
     }
   }
   deriveHardened(index: number): BIP32 {

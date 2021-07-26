@@ -6,6 +6,8 @@ import * as bip39js from 'bip39';
 import * as bip32js from 'bip32';
 import { Buffer } from 'buffer';
 import bs58 from 'bs58';
+// import * as bitcoinjs from 'bitcoinjs-lib';
+// import * as ethereumjs from 'ethereumjs-util';
 
 const network_options = {
   messagePrefix: '\x18Bitcoin Signed Message:\n',
@@ -72,6 +74,21 @@ async function test1() {
   );
 
   console.log('xpub:', createXpub(addr, network_options));
+
+  const addr0 = bip32.fromKeyLocal(
+    undefined,
+    addr.publicKey,
+    addr.chainCode,
+    3,
+    0x80000000,
+    undefined,
+    undefined
+  );
+
+  console.log('xpub2:', createXpub(addr0, network_options));
+
+  const addr1 = addr0.derivePath('0/0');
+  console.log(addr1.publicKey?.toString('hex'));
 }
 
 async function test2() {
@@ -106,6 +123,19 @@ async function test2() {
   );
 
   console.log('xpub:', addr.neutered().toBase58());
+
+  const addr0 = bip32js.fromPublicKey(
+    addr.publicKey,
+    addr.chainCode,
+    network_options
+  );
+  // addr0.__DEPTH = 3;
+  // addr0.__INDEX = 0x80000000;
+
+  console.log('xpub2:', addr0.neutered().toBase58());
+
+  const addr1 = addr0.derivePath('0/0');
+  console.log(addr1.publicKey.toString('hex'));
 }
 
 export default function App() {
