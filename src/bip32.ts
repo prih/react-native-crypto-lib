@@ -107,7 +107,7 @@ function UInt32(value: number): Boolean {
 export class BIP32 {
   private __D: Buffer | undefined;
   private __Q: Buffer | undefined;
-  private chainCode: Buffer;
+  public chainCode: Buffer;
   private __DEPTH: number;
   private __INDEX: number;
   private __PARENT_FINGERPRINT: Buffer | undefined;
