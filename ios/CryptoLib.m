@@ -312,6 +312,47 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(ecdsaRandomPrivate)
 }
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  ecdsaReadPublic:(NSString *)pub
+  withCompact:(int)compact
+)
+{
+  NSData *raw_pub = [[NSData alloc]initWithBase64EncodedString:pub options:0];
+  
+  curve_point pub_point = {0};
+  uint8_t *pub_key;
+
+  uint32_t pub_length = (uint32_t)[raw_pub length];
+  if (pub_length != 33 && pub_length != 65) {
+    @throw [NSException exceptionWithName:@"Error" reason:@"read publicKey error" userInfo:nil];
+  }
+
+  if (!ecdsa_read_pubkey(&secp256k1, [raw_pub bytes], &pub_point)) {
+    @throw [NSException exceptionWithName:@"Error" reason:@"read publicKey error" userInfo:nil];
+  }
+
+  NSData *result;
+
+  if (compact == 0) {
+    pub_key = (uint8_t *) malloc(65);
+    pub_key[0] = 4;
+    bn_write_be(&pub_point.x, pub_key + 1);
+    bn_write_be(&pub_point.y, pub_key + 33);
+
+    result = [NSData dataWithBytes:pub_key length:65];
+    free(pub_key);
+  } else {
+    pub_key = (uint8_t *) malloc(33);
+    pub_key[0] = 0x02 | (pub_point.y.val[0] & 0x01);
+    bn_write_be(&pub_point.x, pub_key + 1);
+
+    result = [NSData dataWithBytes:pub_key length:33];
+    free(pub_key);
+  }
+  
+  return [result base64EncodedStringWithOptions:0];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   ecdsaValidatePublic:(NSString *)pub
 )
 {

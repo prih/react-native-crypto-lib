@@ -307,6 +307,50 @@ Java_com_reactnativecryptolib_CryptoLibModule_ecdsaRandomPrivateNative(
 
 extern "C"
 JNIEXPORT jint JNICALL
+Java_com_reactnativecryptolib_CryptoLibModule_ecdsaReadPublicNative(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jbyteArray pub,
+  const jint compact
+) {
+  curve_point pub_point;
+  uint8_t *pub_key;
+
+  jsize pub_length = env->GetArrayLength(pub);
+  if (pub_length != 33 && pub_length != 65) {
+    return NULL;
+  }
+
+  jbyte *raw_pub = env->GetByteArrayElements(pub, (jboolean *)false);
+
+  if (!ecdsa_read_pubkey(&secp256k1, (const uint8_t *)raw_pub, &pub_point)) {
+    return NULL;
+  }
+
+  if (compact == 0) {
+    pub_key = (uint8_t *) malloc(65);
+    pub_key[0] = 4;
+    bn_write_be(&pub_point.x, pub_key + 1);
+    bn_write_be(&pub_point.y, pub_key + 33);
+
+    jbyteArray result = env->NewByteArray(65);
+    env->SetByteArrayRegion(result, 0, 65, (const jbyte *)pub_key);
+    free(pub_key);
+    return result;
+  } else {
+    pub_key = (uint8_t *) malloc(33);
+    pub_key[0] = 0x02 | (pub_point.y.val[0] & 0x01);
+    bn_write_be(&pub_point.x, pub_key + 1);
+
+    jbyteArray result = env->NewByteArray(33);
+    env->SetByteArrayRegion(result, 0, 33, (const jbyte *)pub_key);
+    free(pub_key);
+    return result;
+  }
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
 Java_com_reactnativecryptolib_CryptoLibModule_ecdsaValidatePublicNative(
   JNIEnv *env,
   __attribute__((unused)) jclass type,

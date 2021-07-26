@@ -1,6 +1,6 @@
 import { NativeModules } from 'react-native';
 import { Buffer } from 'buffer';
-import * as hash from './hash';
+import * as digest from './digest';
 
 const { CryptoLib: CryptoLibNative } = NativeModules;
 
@@ -151,7 +151,7 @@ export class BIP32 {
   }
   get fingerprint() {
     if (!this.__FINGERPRINT && this.publicKey) {
-      const id = hash.createHash('hash160', this.publicKey);
+      const id = digest.createHash('hash160', this.publicKey);
       this.__FINGERPRINT = id.slice(0, 4);
     }
     return this.__FINGERPRINT;

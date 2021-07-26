@@ -172,6 +172,18 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod(isBlockingSynchronousMethod = true)
+    public String ecdsaReadPublic(
+      final String pub,
+      final int compact
+    ) {
+      byte[] result = ecdsaReadPublicNative(Base64.decode(pub, Base64.NO_PADDING), compact);
+      if (result == null) {
+        return null;
+      }
+      return Base64.encodeToString(result, Base64.NO_PADDING | Base64.NO_WRAP);
+    }
+
+    @ReactMethod(isBlockingSynchronousMethod = true)
     public int ecdsaValidatePublic(
       final String pub
     ) {
@@ -212,13 +224,13 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
       final String sig,
       final String digest,
       final int recid,
-      final int compress
+      final int compact
     ) {
       byte[] result = ecdsaRecoverNative(
         Base64.decode(sig, Base64.NO_PADDING),
         Base64.decode(digest, Base64.NO_PADDING),
         recid,
-        compress
+        compact
       );
       if (result == null) {
         return null;
@@ -230,12 +242,12 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     public String ecdsaEcdh(
       final String pub,
       final String priv,
-      final int compress
+      final int compact
     ) {
       byte[] result = ecdsaEcdhNative(
         Base64.decode(pub, Base64.NO_PADDING),
         Base64.decode(priv, Base64.NO_PADDING),
-        compress
+        compact
       );
       if (result == null) {
         return null;
@@ -324,12 +336,13 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     public static native String generateMnemonicNative(int strength);
     public static native int validateMnemonicNative(String mnemonic);
     public static native byte[] ecdsaRandomPrivateNative();
+    public static native byte[] ecdsaReadPublicNative(byte[] pub, int compact);
     public static native int ecdsaValidatePublicNative(byte[] pub);
     public static native int ecdsaValidatePrivateNative(byte[] priv);
     public static native byte[] ecdsaGetPublic33Native(byte[] priv);
     public static native byte[] ecdsaGetPublic65Native(byte[] priv);
-    public static native byte[] ecdsaRecoverNative(byte[] sig, byte[] digest, int recid, int compress);
-    public static native byte[] ecdsaEcdhNative(byte[] pub, byte[] priv, int compress);
+    public static native byte[] ecdsaRecoverNative(byte[] sig, byte[] digest, int recid, int compact);
+    public static native byte[] ecdsaEcdhNative(byte[] pub, byte[] priv, int compact);
     public static native int ecdsaVerifyNative(byte[] pub, byte[] sig, byte[] digest);
     public static native byte[] ecdsaSignNative(byte[] priv, byte[] digest);
     public static native byte[] hdNodeFromSeedNative(byte[] seed);
