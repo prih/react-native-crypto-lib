@@ -1,6 +1,7 @@
 import { NativeModules } from 'react-native';
 import { Buffer } from 'buffer';
 import * as digest from './digest';
+import * as secp256k1 from './secp256k1';
 
 const { CryptoLib: CryptoLibNative } = NativeModules;
 
@@ -118,6 +119,7 @@ export class BIP32 {
   private __INDEX: number;
   private __PARENT_FINGERPRINT: Buffer | undefined;
   private __FINGERPRINT: Buffer | undefined;
+  private lowR: Boolean = false;
 
   constructor(
     __D: Buffer | undefined,
@@ -330,28 +332,32 @@ export class BIP32 {
       }
     }, this);
   }
-  // sign(hash, lowR) {
-  //   if (!this.privateKey) throw new Error('Missing private key');
-  //   if (lowR === undefined) lowR = this.lowR;
-  //   if (lowR === false) {
-  //     return ecc.sign(hash, this.privateKey);
-  //   } else {
-  //     let sig = ecc.sign(hash, this.privateKey);
-  //     const extraData = Buffer.alloc(32, 0);
-  //     let counter = 0;
-  //     // if first try is lowR, skip the loop
-  //     // for second try and on, add extra entropy counting up
-  //     while (sig[0] > 0x7f) {
-  //       counter++;
-  //       extraData.writeUIntLE(counter, 0, 6);
-  //       sig = ecc.signWithEntropy(hash, this.privateKey, extraData);
-  //     }
-  //     return sig;
-  //   }
-  // }
-  // verify(hash, signature) {
-  //   return ecc.verify(hash, this.publicKey, signature);
-  // }
+  sign(hash: Buffer, lowR: Boolean = false) {
+    if (!this.privateKey) throw new Error('Missing private key');
+    if (lowR === undefined) lowR = this.lowR;
+    if (lowR === false) {
+      return secp256k1.signSync(this.privateKey, hash).signature;
+    } else {
+      throw new Error('lowR is now allowed');
+      // let sig = secp256k1.signSync(this.privateKey, hash);
+      // const extraData = Buffer.alloc(32, 0);
+      // let counter = 0;
+      // // if first try is lowR, skip the loop
+      // // for second try and on, add extra entropy counting up
+      // while (sig.signature[0] > 0x7f) {
+      //   counter++;
+      //   extraData.writeUIntLE(counter, 0, 6);
+      //   sig = ecc.signWithEntropy(hash, this.privateKey, extraData);
+      // }
+      // return sig;
+    }
+  }
+  verify(hash: Buffer, signature: Buffer) {
+    if (!this.publicKey) {
+      throw new Error('Missing public key');
+    }
+    return secp256k1.verify(this.publicKey, signature, hash);
+  }
 }
 
 export function fromKeyLocal(
