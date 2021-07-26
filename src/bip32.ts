@@ -45,7 +45,7 @@ const bip32Native = {
       chain_code: data.slice(8, 40),
       private_key: data.slice(40, 72),
       public_key: data.slice(72, 105),
-      fingerprint: data.slice(105, 109),
+      fingerprint: data.slice(105, 109).reverse(),
     } as HDNodeData;
 
     return hdnode_data;
@@ -62,7 +62,7 @@ const bip32Native = {
       data.chain_code,
       data.private_key,
       data.public_key,
-      data.fingerprint,
+      Buffer.alloc(4, 0),
     ]);
 
     const result = CryptoLibNative.hdNodeDerive(
@@ -83,7 +83,7 @@ const bip32Native = {
       chain_code: new_data.slice(8, 40),
       private_key: new_data.slice(40, 72),
       public_key: new_data.slice(72, 105),
-      fingerprint: new_data.slice(105, 109),
+      fingerprint: new_data.slice(105, 109).reverse(),
     } as HDNodeData;
 
     return hdnode_data;
