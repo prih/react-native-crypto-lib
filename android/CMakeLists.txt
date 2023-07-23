@@ -1,24 +1,30 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.4.1)
+
+project(CryptoLib)
 
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 11)
 
 file(GLOB_RECURSE lib_sources RELATIVE ${CMAKE_SOURCE_DIR}
-  ../external/crypto/*.c
+  ../crypto/*.c
 )
 
-add_library(crypto
-  SHARED
-    ${lib_sources}
-    cpp-adapter.cpp
+add_library(cryptolib
+            SHARED
+            ${lib_sources}
+            ../cpp/react-native-crypto-lib.cpp
+            cpp-adapter.cpp
 )
 
+# Specifies a path to native header files.
 include_directories(
-  ../external/crypto
+            ../cpp
+            ../crypto
 )
 
-target_compile_options(crypto
+target_compile_options(cryptolib
   PRIVATE
+    -std=gnu99
     -W
     -Wall
     -Wextra
@@ -38,4 +44,6 @@ target_compile_options(crypto
     -Wformat-security
     -Wno-missing-braces
     -Werror
+
+    -DUSE_MONERO=0
 )

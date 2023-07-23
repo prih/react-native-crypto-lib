@@ -1,6 +1,4 @@
 rootProject.name = 'CryptoLibExample'
 apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
 include ':app'
-
-include ':reactnativecryptolib'
-project(':reactnativecryptolib').projectDir = new File(rootProject.projectDir, '../../android')
+includeBuild('../node_modules/@react-native/gradle-plugin')

@@ -1,50 +1,29 @@
 #include <jni.h>
+#include <cstdlib>
 #include <stdexcept>
-#include <string>
+#include "react-native-crypto-lib.h"
 
-#include "options.h"
-#include "rand.h"
-#include "sha2.h"
-#include "sha3.h"
-#include "ripemd160.h"
-#include "hmac.h"
-#include "pbkdf2.h"
-#include "bip39.h"
-#include "ecdsa.h"
-#include "secp256k1.h"
-#include "bignum.h"
 #include "memzero.h"
 #include "bip32.h"
 
-enum HASH_TYPE {
-  SHA1,
-  SHA256,
-  SHA512,
-  SHA3_256,
-  SHA3_512,
-  KECCAK_256,
-  KECCAK_512,
-  RIPEMD160,
-  HASH256,
-  HASH160
-};
-
-enum DERIVE_TYPE {
-  DERIVE_PRIVATE,
-  DERIVE_PUBLIC,
-};
-
 extern "C"
-JNIEXPORT jint JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_randomNumberNative() {
-  return random32();
+JNIEXPORT jdouble JNICALL
+Java_com_cryptolib_CryptoLibModule_nativeRandomNumber(
+  __attribute__((unused)) JNIEnv *env,
+  __attribute__((unused)) jclass type
+) {
+  return (jdouble) cryptolib::randomNumber();
 }
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_randomBytesNative(JNIEnv *env, __attribute__((unused)) jclass type, jint length) {
+Java_com_cryptolib_CryptoLibModule_nativeRandomBytes(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  jint length
+) {
   jbyte *bytes = (jbyte *) malloc(length);
-  random_buffer(reinterpret_cast<uint8_t *>(bytes), length);
+  cryptolib::randomBytes(reinterpret_cast<uint8_t *>(bytes), length);
 
   jbyteArray result;
   result = env->NewByteArray(length);
@@ -57,82 +36,49 @@ Java_com_reactnativecryptolib_CryptoLibModule_randomBytesNative(JNIEnv *env, __a
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_hashNative(
+Java_com_cryptolib_CryptoLibModule_nativeHash(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
   jint algorithm,
   jbyteArray data
 ) {
-  jsize num_bytes = env->GetArrayLength(data);
-  jbyte *raw_data = env->GetByteArrayElements(data, (jboolean *)false);
-  
-  jbyte *hash = {0};
-  jsize hash_length = 0;
+  jsize dataSize = env->GetArrayLength(data);
+  jbyte *dataBytes = env->GetByteArrayElements(data, (jboolean *)false);
 
-  switch (algorithm)
-  {
+  jsize hashSize;
+
+  switch (algorithm) {
     case SHA1:
-      hash_length = SHA1_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      sha1_Raw(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
+    case RIPEMD160:
+    case HASH160:
+      hashSize = 20;
       break;
     case SHA256:
-      hash_length = SHA256_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      sha256_Raw(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
+    case SHA3_256:
+    case KECCAK_256:
+    case HASH256:
+      hashSize = 32;
       break;
     case SHA512:
-      hash_length = SHA512_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      sha512_Raw(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
-      break;
-    case SHA3_256:
-      hash_length = SHA3_256_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      sha3_256(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
-      break;
     case SHA3_512:
-      hash_length = SHA3_512_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      sha3_512(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
-      break;
-    case KECCAK_256:
-      hash_length = SHA3_256_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      keccak_256(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
-      break;
     case KECCAK_512:
-      hash_length = SHA3_512_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      keccak_512(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
+      hashSize = 64;
       break;
-    case RIPEMD160:
-      hash_length = RIPEMD160_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      ripemd160(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
-      break;
-    case HASH256:
-      hash_length = SHA256_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      sha256_Raw(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(hash));
-      sha256_Raw(reinterpret_cast<uint8_t *>(hash), hash_length, reinterpret_cast<uint8_t *>(hash));
-      break;
-    case HASH160:
-      hash_length = RIPEMD160_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      uint8_t tmp[SHA256_DIGEST_LENGTH];
 
-      sha256_Raw(reinterpret_cast<uint8_t *>(raw_data), num_bytes, reinterpret_cast<uint8_t *>(&tmp));
-      ripemd160(reinterpret_cast<uint8_t *>(&tmp), SHA256_DIGEST_LENGTH, reinterpret_cast<uint8_t *>(hash));
-      break;
-    
     default:
       throw std::invalid_argument("unknown hash type");
-      break;
   }
-  
-  jbyteArray result = env->NewByteArray(hash_length);
-  env->SetByteArrayRegion(result, 0, hash_length, hash);
+
+  jbyte *hash = (jbyte *) malloc(hashSize);
+  cryptolib::hash(
+    static_cast<HASH_TYPE>(algorithm),
+    reinterpret_cast<uint8_t *>(dataBytes),
+    dataSize,
+    reinterpret_cast<uint8_t *>(hash)
+  );
+
+  jbyteArray result = env->NewByteArray(hashSize);
+  env->SetByteArrayRegion(result, 0, hashSize, hash);
 
   free(hash);
 
@@ -141,49 +87,44 @@ Java_com_reactnativecryptolib_CryptoLibModule_hashNative(
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_hmacNative(
+Java_com_cryptolib_CryptoLibModule_nativeHmac(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
   jint algorithm,
   jbyteArray key,
   jbyteArray data
 ) {
-  jsize key_length = env->GetArrayLength(key);
-  jbyte *raw_key = env->GetByteArrayElements(key, (jboolean *)false);
-  jsize data_length = env->GetArrayLength(data);
-  jbyte *raw_data = env->GetByteArrayElements(data, (jboolean *)false);
-  
-  jbyte *hash = {0};
-  jsize hash_length = 0;
+  jsize keySize = env->GetArrayLength(key);
+  jbyte *keyBytes = env->GetByteArrayElements(key, (jboolean *)false);
+  jsize dataSize = env->GetArrayLength(data);
+  jbyte *dataBytes = env->GetByteArrayElements(data, (jboolean *)false);
 
-  switch (algorithm)
-  {
+  jsize hashSize;
+
+  switch (algorithm) {
     case SHA256:
-      hash_length = SHA256_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      hmac_sha256(
-        reinterpret_cast<uint8_t *>(raw_key), key_length,
-        reinterpret_cast<uint8_t *>(raw_data), data_length,
-        reinterpret_cast<uint8_t *>(hash)
-      );
+      hashSize = 32;
       break;
     case SHA512:
-      hash_length = SHA512_DIGEST_LENGTH;
-      hash = (jbyte *) malloc(hash_length);
-      hmac_sha512(
-        reinterpret_cast<uint8_t *>(raw_key), key_length,
-        reinterpret_cast<uint8_t *>(raw_data), data_length,
-        reinterpret_cast<uint8_t *>(hash)
-      );
+      hashSize = 64;
       break;
-    
+
     default:
       throw std::invalid_argument("unknown hash type");
-      break;
   }
-  
-  jbyteArray result = env->NewByteArray(hash_length);
-  env->SetByteArrayRegion(result, 0, hash_length, hash);
+
+  jbyte *hash = (jbyte *) malloc(hashSize);
+  cryptolib::hmac(
+    static_cast<HASH_TYPE>(algorithm),
+    reinterpret_cast<uint8_t *>(keyBytes),
+    keySize,
+    reinterpret_cast<uint8_t *>(dataBytes),
+    dataSize,
+    reinterpret_cast<uint8_t *>(hash)
+  );
+
+  jbyteArray result = env->NewByteArray(hashSize);
+  env->SetByteArrayRegion(result, 0, hashSize, hash);
 
   free(hash);
 
@@ -192,7 +133,7 @@ Java_com_reactnativecryptolib_CryptoLibModule_hmacNative(
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_pbkdf2Native(
+Java_com_cryptolib_CryptoLibModule_nativePbkdf2(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
   jint algorithm,
@@ -205,43 +146,28 @@ Java_com_reactnativecryptolib_CryptoLibModule_pbkdf2Native(
   jbyte *raw_pass = env->GetByteArrayElements(pass, (jboolean *)false);
   jsize salt_length = env->GetArrayLength(salt);
   jbyte *raw_salt = env->GetByteArrayElements(salt, (jboolean *)false);
-  
-  jbyte *hash = (jbyte *) malloc(keyLength);
 
-  switch (algorithm)
-  {
-    case SHA256:
-      pbkdf2_hmac_sha256(
-        reinterpret_cast<uint8_t *>(raw_pass), pass_length,
-        reinterpret_cast<uint8_t *>(raw_salt), salt_length,
-        iterations,
-        reinterpret_cast<uint8_t *>(hash), keyLength
-      );
-      break;
-    case SHA512:
-      pbkdf2_hmac_sha512(
-        reinterpret_cast<uint8_t *>(raw_pass), pass_length,
-        reinterpret_cast<uint8_t *>(raw_salt), salt_length,
-        iterations,
-        reinterpret_cast<uint8_t *>(hash), keyLength
-      );
-      break;
-    
-    default:
-      throw std::invalid_argument("unknown hash type");
-      break;
-  }
-  
+  jbyte *key = (jbyte *) malloc(keyLength);
+
+  cryptolib::pbkdf2(
+    static_cast<HASH_TYPE>(algorithm),
+    reinterpret_cast<uint8_t *>(raw_pass), pass_length,
+    reinterpret_cast<uint8_t *>(raw_salt), salt_length,
+    iterations,
+    reinterpret_cast<uint8_t *>(key), keyLength
+  );
+
   jbyteArray result = env->NewByteArray(keyLength);
-  env->SetByteArrayRegion(result, 0, keyLength, hash);
+  env->SetByteArrayRegion(result, 0, keyLength, key);
 
-  free(hash);
+  free(key);
+
   return result;
 }
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_mnemonicToSeedNative(
+Java_com_cryptolib_CryptoLibModule_nativeMnemonicToSeed(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
   const jstring mnemonic,
@@ -249,12 +175,12 @@ Java_com_reactnativecryptolib_CryptoLibModule_mnemonicToSeedNative(
 ) {
   const char *raw_mnemonic = env->GetStringUTFChars(mnemonic, 0);
   const char *raw_passphrase = env->GetStringUTFChars(passphrase, 0);
-  jbyte *seed = (jbyte *) malloc(SHA512_DIGEST_LENGTH);
+  jbyte *seed = (jbyte *) malloc(64);
 
-  mnemonic_to_seed(raw_mnemonic, raw_passphrase, reinterpret_cast<uint8_t *>(seed), 0);
+  cryptolib::mnemonicToSeed(raw_mnemonic, raw_passphrase, reinterpret_cast<uint8_t *>(seed));
 
-  jbyteArray result = env->NewByteArray(SHA512_DIGEST_LENGTH);
-  env->SetByteArrayRegion(result, 0, SHA512_DIGEST_LENGTH, seed);
+  jbyteArray result = env->NewByteArray(64);
+  env->SetByteArrayRegion(result, 0, 64, seed);
   free(seed);
 
   return result;
@@ -262,156 +188,224 @@ Java_com_reactnativecryptolib_CryptoLibModule_mnemonicToSeedNative(
 
 extern "C"
 JNIEXPORT jstring JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_generateMnemonicNative(
+Java_com_cryptolib_CryptoLibModule_nativeGenerateMnemonic(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
   const jint strength
 ) {
-  return env->NewStringUTF(mnemonic_generate((int)strength));
+  return env->NewStringUTF(cryptolib::generateMnemonic((int)strength));
 }
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_validateMnemonicNative(
+Java_com_cryptolib_CryptoLibModule_nativeValidateMnemonic(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
   const jstring mnemonic
 ) {
-  return (jint) mnemonic_check(env->GetStringUTFChars(mnemonic, (jboolean *)false));
+  return (jint) cryptolib::validateMnemonic(env->GetStringUTFChars(mnemonic, (jboolean *)false));
+}
+
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cryptolib_CryptoLibModule_nativeHdNodeFromSeed(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jstring curve,
+  const jbyteArray seed
+) {
+  const uint8_t *raw_seed = (uint8_t *) env->GetByteArrayElements(seed, (jboolean *)false);
+
+  HDNode node = {};
+  int success = hdnode_from_seed(
+    raw_seed,
+    env->GetArrayLength(seed),
+    env->GetStringUTFChars(curve, (jboolean *)false),
+    &node
+  );
+
+  if (success != 1) {
+    return NULL;
+  }
+
+  uint32_t fp = hdnode_fingerprint(&node);
+
+  jclass node_class = env->FindClass("com/cryptolib/CryptoLibHDNode");
+  jfieldID depth_field = env->GetFieldID(node_class, "depth", "D");
+  jfieldID child_num_field = env->GetFieldID(node_class, "child_num", "D");
+  jfieldID chain_code_field = env->GetFieldID(node_class, "chain_code", "[B");
+  jfieldID private_key_field = env->GetFieldID(node_class, "private_key", "[B");
+  jfieldID public_key_field = env->GetFieldID(node_class, "public_key", "[B");
+  jfieldID fingerprint_field = env->GetFieldID(node_class, "fingerprint", "D");
+  jfieldID curve_field = env->GetFieldID(node_class, "curve", "Ljava/lang/String;");
+  jfieldID private_derive_field = env->GetFieldID(node_class, "private_derive", "Z");
+
+  jobject result = env->AllocObject(node_class);
+
+  env->SetDoubleField(result, depth_field, (jdouble) node.depth);
+  env->SetDoubleField(result, child_num_field, (jdouble) node.child_num);
+
+  jbyteArray chain_code = env->NewByteArray(sizeof(node.chain_code));
+  env->SetByteArrayRegion(chain_code, 0, sizeof(node.chain_code), (jbyte *) &node.chain_code);
+  env->SetObjectField(result, chain_code_field, chain_code);
+
+  jbyteArray private_key = env->NewByteArray(sizeof(node.private_key));
+  env->SetByteArrayRegion(private_key, 0, sizeof(node.private_key), (jbyte *) &node.private_key);
+  env->SetObjectField(result, private_key_field, private_key);
+
+  jbyteArray public_key = env->NewByteArray(sizeof(node.public_key));
+  env->SetByteArrayRegion(public_key, 0, sizeof(node.public_key), (jbyte *) &node.public_key);
+  env->SetObjectField(result, public_key_field, public_key);
+  
+  env->SetDoubleField(result, fingerprint_field, (jdouble) fp);
+  env->SetObjectField(result, curve_field, curve);
+
+  env->SetBooleanField(result, private_derive_field, true);
+
+  return result;
+}
+
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_com_cryptolib_CryptoLibModule_nativeHdNodeDerive(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  const jobject data,
+  const jdoubleArray path
+) {
+  jclass node_class = env->FindClass("com/cryptolib/CryptoLibHDNode");
+  jfieldID depth_field = env->GetFieldID(node_class, "depth", "D");
+  jfieldID child_num_field = env->GetFieldID(node_class, "child_num", "D");
+  jfieldID chain_code_field = env->GetFieldID(node_class, "chain_code", "[B");
+  jfieldID private_key_field = env->GetFieldID(node_class, "private_key", "[B");
+  jfieldID public_key_field = env->GetFieldID(node_class, "public_key", "[B");
+  jfieldID fingerprint_field = env->GetFieldID(node_class, "fingerprint", "D");
+  jfieldID curve_field = env->GetFieldID(node_class, "curve", "Ljava/lang/String;");
+  jfieldID private_derive_field = env->GetFieldID(node_class, "private_derive", "Z");
+
+  HDNode node = {};
+
+  node.depth = (uint32_t) env->GetDoubleField(data, depth_field);
+  node.child_num = (uint32_t) env->GetDoubleField(data, child_num_field);
+
+  jbyteArray chain_code = (jbyteArray) env->GetObjectField(data, chain_code_field);
+  env->GetByteArrayRegion(chain_code, 0, sizeof(node.chain_code), (jbyte *) &node.chain_code);
+
+  jbyteArray private_key = (jbyteArray) env->GetObjectField(data, private_key_field);
+  env->GetByteArrayRegion(private_key, 0, sizeof(node.private_key), (jbyte *) &node.private_key);
+
+  jbyteArray public_key = (jbyteArray) env->GetObjectField(data, public_key_field);
+  env->GetByteArrayRegion(public_key, 0, sizeof(node.public_key), (jbyte *) &node.public_key);
+
+  jstring curve = (jstring) env->GetObjectField(data, curve_field);
+
+  node.curve = get_curve_by_name(env->GetStringUTFChars(curve, (jboolean *)false));
+
+  bool private_derive = env->GetBooleanField(data, private_derive_field);
+
+  jdouble *path_items = env->GetDoubleArrayElements(path, (jboolean *)false);
+  jsize path_items_count = env->GetArrayLength(path);
+
+  int success;
+
+  for (int i = 0; i < path_items_count; i++) {
+    jdouble index = path_items[i];
+
+    if (private_derive) {
+      success = hdnode_private_ckd(&node, index);
+      if (success == 1) {
+        hdnode_fill_public_key(&node);
+      }
+    } else {
+      success = hdnode_public_ckd(&node, index);
+    }
+
+    if (success != 1) {
+      return NULL;
+    }
+  }
+
+  uint32_t fp = hdnode_fingerprint(&node);
+
+  jobject result = env->AllocObject(node_class);
+
+  env->SetDoubleField(result, depth_field, (jdouble) node.depth);
+  env->SetDoubleField(result, child_num_field, (jdouble) node.child_num);
+
+  chain_code = env->NewByteArray(sizeof(node.chain_code));
+  env->SetByteArrayRegion(chain_code, 0, sizeof(node.chain_code), (jbyte *) &node.chain_code);
+  env->SetObjectField(result, chain_code_field, chain_code);
+
+  private_key = env->NewByteArray(sizeof(node.private_key));
+  env->SetByteArrayRegion(private_key, 0, sizeof(node.private_key), (jbyte *) &node.private_key);
+  env->SetObjectField(result, private_key_field, private_key);
+
+  public_key = env->NewByteArray(sizeof(node.public_key));
+  env->SetByteArrayRegion(public_key, 0, sizeof(node.public_key), (jbyte *) &node.public_key);
+  env->SetObjectField(result, public_key_field, public_key);
+  
+  env->SetDoubleField(result, fingerprint_field, (jdouble) fp);
+  env->SetObjectField(result, curve_field, curve);
+
+  env->SetBooleanField(result, private_derive_field, private_derive);
+
+  return result;
 }
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_ecdsaRandomPrivateNative(
+Java_com_cryptolib_CryptoLibModule_nativeEcdsaRandomPrivate(
   JNIEnv *env,
   __attribute__((unused)) jclass type
 ) {
-  uint8_t *priv = (uint8_t *) malloc(32);
-  bignum256 p;
+  jbyte *priv = (jbyte *) malloc(ECDSA_KEY_SIZE);
 
-  while(true) {
-    random_buffer(priv, 32);
-    bn_read_be(priv, &p);
+  cryptolib::ecdsaRandomPrivate(reinterpret_cast<uint8_t *>(priv));
 
-    if (!bn_is_zero(&p) && bn_is_less(&p, &secp256k1.order)) {
-      break;
-    }
-  }
-  
-  jbyteArray result = env->NewByteArray(32);
-  env->SetByteArrayRegion(result, 0, 32, (const jbyte *)priv);
+  jbyteArray result = env->NewByteArray(ECDSA_KEY_SIZE);
+  env->SetByteArrayRegion(result, 0, ECDSA_KEY_SIZE, priv);
+
+  memzero(priv, ECDSA_KEY_SIZE);
   free(priv);
 
   return result;
 }
 
 extern "C"
-JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_ecdsaReadPublicNative(
+JNIEXPORT jboolean JNICALL
+Java_com_cryptolib_CryptoLibModule_nativeEcdsaValidatePrivate(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
-  const jbyteArray pub,
-  const jint compact
+  jbyteArray priv
 ) {
-  curve_point pub_point;
-  uint8_t *pub_key;
-
-  jsize pub_length = env->GetArrayLength(pub);
-  if (pub_length != 33 && pub_length != 65) {
-    return NULL;
-  }
-
-  jbyte *raw_pub = env->GetByteArrayElements(pub, (jboolean *)false);
-
-  if (!ecdsa_read_pubkey(&secp256k1, (const uint8_t *)raw_pub, &pub_point)) {
-    return NULL;
-  }
-
-  if (compact == 0) {
-    pub_key = (uint8_t *) malloc(65);
-    pub_key[0] = 4;
-    bn_write_be(&pub_point.x, pub_key + 1);
-    bn_write_be(&pub_point.y, pub_key + 33);
-
-    jbyteArray result = env->NewByteArray(65);
-    env->SetByteArrayRegion(result, 0, 65, (const jbyte *)pub_key);
-    free(pub_key);
-    return result;
-  } else {
-    pub_key = (uint8_t *) malloc(33);
-    pub_key[0] = 0x02 | (pub_point.y.val[0] & 0x01);
-    bn_write_be(&pub_point.x, pub_key + 1);
-
-    jbyteArray result = env->NewByteArray(33);
-    env->SetByteArrayRegion(result, 0, 33, (const jbyte *)pub_key);
-    free(pub_key);
-    return result;
-  }
-}
-
-extern "C"
-JNIEXPORT jint JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_ecdsaValidatePublicNative(
-  JNIEnv *env,
-  __attribute__((unused)) jclass type,
-  const jbyteArray pub
-) {
-  curve_point pub_point;
-
-  jsize pub_length = env->GetArrayLength(pub);
-  if (pub_length != 33 && pub_length != 65) {
-    return 0;
-  }
-
-  jbyte *raw_pub = env->GetByteArrayElements(pub, (jboolean *)false);
-
-  return ecdsa_read_pubkey(&secp256k1, (const uint8_t *)raw_pub, &pub_point);
-}
-
-extern "C"
-JNIEXPORT jint JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_ecdsaValidatePrivateNative(
-  JNIEnv *env,
-  __attribute__((unused)) jclass type,
-  const jbyteArray priv
-) {
-  jsize key_length = env->GetArrayLength(priv);
-  if (key_length != 32) {
-    return 0;
-  }
-
-  jbyte *raw_priv = env->GetByteArrayElements(priv, (jboolean *)false);
-
-  bignum256 p;
-  bn_read_be((const uint8_t *)raw_priv, &p);
-
-  if (bn_is_zero(&p) || (!bn_is_less(&p, &secp256k1.order))) {
-    return 0;
-  }
-  
-  return 1;
+  uint8_t *raw_priv = (uint8_t *) env->GetByteArrayElements(priv, (jboolean *)false);
+  return cryptolib::ecdsaValidatePrivate(raw_priv);
 }
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_ecdsaGetPublic33Native(
+Java_com_cryptolib_CryptoLibModule_nativeEcdsaGetPublic(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
-  const jbyteArray priv
+  jbyteArray priv,
+  jboolean compact
 ) {
-  uint8_t pub_size = 33;
-  jsize key_length = env->GetArrayLength(priv);
-  if (key_length != 32) {
+  uint8_t *raw_priv = (uint8_t *) env->GetByteArrayElements(priv, (jboolean *)false);
+
+  uint8_t *pub;
+  int pub_size = compact ? ECDSA_KEY_33_SIZE : ECDSA_KEY_65_SIZE;
+
+  pub = (uint8_t *) malloc(pub_size);
+
+  if (!cryptolib::ecdsaGetPublic(raw_priv, pub, compact)) {
+    memzero(raw_priv, ECDSA_KEY_SIZE);
     return NULL;
   }
 
-  jbyte *raw_priv = env->GetByteArrayElements(priv, (jboolean *)false);
-
-  uint8_t *pub = (uint8_t *) malloc(pub_size);
-  ecdsa_get_public_key33(&secp256k1, (const uint8_t *)raw_priv, pub);
-  
   jbyteArray result = env->NewByteArray(pub_size);
-  env->SetByteArrayRegion(result, 0, pub_size, (const jbyte *)pub);
+  env->SetByteArrayRegion(result, 0, pub_size, (jbyte *) pub);
+
+  memzero(raw_priv, ECDSA_KEY_SIZE);
   free(pub);
 
   return result;
@@ -419,24 +413,63 @@ Java_com_reactnativecryptolib_CryptoLibModule_ecdsaGetPublic33Native(
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_ecdsaGetPublic65Native(
+Java_com_cryptolib_CryptoLibModule_nativeEcdsaReadPublic(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
-  const jbyteArray priv
+  jbyteArray pub,
+  jboolean compact
 ) {
-  uint8_t pub_size = 65;
-  jsize key_length = env->GetArrayLength(priv);
-  if (key_length != 32) {
+  uint8_t *raw_pub = (uint8_t *) env->GetByteArrayElements(pub, (jboolean *)false);
+
+  uint8_t *out_pub;
+  int pub_size = compact ? ECDSA_KEY_33_SIZE : ECDSA_KEY_65_SIZE;
+
+  out_pub = (uint8_t *) malloc(pub_size);
+
+  if (!cryptolib::ecdsaReadPublic(raw_pub, out_pub, compact)) {
     return NULL;
   }
 
-  jbyte *raw_priv = env->GetByteArrayElements(priv, (jboolean *)false);
-
-  uint8_t *pub = (uint8_t *) malloc(pub_size);
-  ecdsa_get_public_key65(&secp256k1, (const uint8_t *)raw_priv, pub);
-  
   jbyteArray result = env->NewByteArray(pub_size);
-  env->SetByteArrayRegion(result, 0, pub_size, (const jbyte *)pub);
+  env->SetByteArrayRegion(result, 0, pub_size, (jbyte *) out_pub);
+
+  free(out_pub);
+
+  return result;
+}
+
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_cryptolib_CryptoLibModule_nativeEcdsaValidatePublic(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  jbyteArray pub
+) {
+  uint8_t *raw_pub = (uint8_t *) env->GetByteArrayElements(pub, (jboolean *)false);
+  return cryptolib::ecdsaValidatePublic(raw_pub);
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_cryptolib_CryptoLibModule_nativeEcdsaRecover(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  jbyteArray sig,
+  jint recId,
+  jbyteArray digest
+) {
+  uint8_t *raw_sig = (uint8_t *) env->GetByteArrayElements(sig, (jboolean *)false);
+  uint8_t *raw_digest = (uint8_t *) env->GetByteArrayElements(digest, (jboolean *)false);
+
+  uint8_t *pub = (uint8_t *) malloc(ECDSA_KEY_65_SIZE);
+
+  if (!cryptolib::ecdsaRecover(raw_sig, recId, raw_digest, pub)) {
+    return NULL;
+  }
+
+  jbyteArray result = env->NewByteArray(ECDSA_KEY_65_SIZE);
+  env->SetByteArrayRegion(result, 0, ECDSA_KEY_65_SIZE, (jbyte *) pub);
+
   free(pub);
 
   return result;
@@ -444,292 +477,75 @@ Java_com_reactnativecryptolib_CryptoLibModule_ecdsaGetPublic65Native(
 
 extern "C"
 JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_ecdsaRecoverNative(
+Java_com_cryptolib_CryptoLibModule_nativeEcdsaEcdh(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
-  const jbyteArray sig,
-  const jbyteArray digest,
-  const jint recid,
-  const jint compact
+  jbyteArray pub,
+  jbyteArray priv,
+  jboolean compact
 ) {
-  jsize sig_length = env->GetArrayLength(sig);
-  if (sig_length != 64) {
+  uint8_t *raw_pub = (uint8_t *) env->GetByteArrayElements(pub, (jboolean *)false);
+  uint8_t *raw_priv = (uint8_t *) env->GetByteArrayElements(priv, (jboolean *)false);
+
+  uint8_t *ecdh;
+  int pub_size = compact ? ECDSA_KEY_33_SIZE : ECDSA_KEY_65_SIZE;
+
+  ecdh = (uint8_t *) malloc(pub_size);
+
+  if (!cryptolib::ecdsaEcdh(raw_pub, raw_priv, ecdh, compact)) {
+    memzero(raw_priv, ECDSA_KEY_SIZE);
     return NULL;
   }
 
-  jsize digest_length = env->GetArrayLength(digest);
-  if (digest_length != 32) {
-    return NULL;
-  }
+  jbyteArray result = env->NewByteArray(pub_size);
+  env->SetByteArrayRegion(result, 0, pub_size, (jbyte *) ecdh);
 
-  const uint8_t *raw_sig = (uint8_t *) env->GetByteArrayElements(sig, (jboolean *)false);
-  const uint8_t *raw_digest = (uint8_t *) env->GetByteArrayElements(digest, (jboolean *)false);
-
-  uint8_t *pub = (uint8_t *) malloc(65);
-  int err = ecdsa_recover_pub_from_sig(
-    &secp256k1,
-    pub,
-    raw_sig,
-    raw_digest,
-    recid
-  );
-
-  if (err > 0) {
-    free(pub);
-    return NULL;
-  }
-
-  if (compact == 0) {
-    jbyteArray result = env->NewByteArray(65);
-    env->SetByteArrayRegion(result, 0, 65, (const jbyte *)pub);
-    free(pub);
-    return result;
-  } else {
-    uint8_t *pub_compact = (uint8_t *) malloc(33);
-
-    curve_point p = {};
-    bn_read_be(pub + 1, &(p.x));
-    bn_read_be(pub + 33, &(p.y));
-
-    pub_compact[0] = 0x02 | (p.y.val[0] & 0x01);
-    bn_write_be(&p.x, pub_compact + 1);
-    memzero(&p, sizeof(p));
-
-    jbyteArray result = env->NewByteArray(33);
-    env->SetByteArrayRegion(result, 0, 33, (const jbyte *)pub_compact);
-    free(pub);
-    free(pub_compact);
-
-    return result;
-  }
-}
-
-extern "C"
-JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_ecdsaEcdhNative(
-  JNIEnv *env,
-  __attribute__((unused)) jclass type,
-  const jbyteArray pub,
-  const jbyteArray priv,
-  const jint compact
-) {
-  jsize pub_length = env->GetArrayLength(pub);
-  if (pub_length != 33 && pub_length != 65) {
-    return NULL;
-  }
-
-  jsize priv_length = env->GetArrayLength(priv);
-  if (priv_length != 32) {
-    return NULL;
-  }
-
-  const uint8_t *raw_pub = (uint8_t *) env->GetByteArrayElements(pub, (jboolean *)false);
-  const uint8_t *raw_priv = (uint8_t *) env->GetByteArrayElements(priv, (jboolean *)false);
-
-  uint8_t *ecdh = (uint8_t *) malloc(65);
-  int err = ecdh_multiply(&secp256k1, raw_priv, raw_pub, ecdh);
-
-  if (err != 0) {
-    free(ecdh);
-    return NULL;
-  }
-  
-  if (compact == 0) {
-    jbyteArray result = env->NewByteArray(65);
-    env->SetByteArrayRegion(result, 0, 65, (const jbyte *)ecdh);
-    free(ecdh);
-    return result;
-  } else {
-    uint8_t *ecdh_compact = (uint8_t *) malloc(33);
-
-    curve_point p = {};
-    bn_read_be(ecdh + 1, &(p.x));
-    bn_read_be(ecdh + 33, &(p.y));
-
-    ecdh_compact[0] = 0x02 | (p.y.val[0] & 0x01);
-    bn_write_be(&p.x, ecdh_compact + 1);
-    memzero(&p, sizeof(p));
-
-    jbyteArray result = env->NewByteArray(33);
-    env->SetByteArrayRegion(result, 0, 33, (const jbyte *)ecdh_compact);
-    free(ecdh);
-    free(ecdh_compact);
-
-    return result;
-  }
-}
-
-extern "C"
-JNIEXPORT jint JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_ecdsaVerifyNative(
-  JNIEnv *env,
-  __attribute__((unused)) jclass type,
-  const jbyteArray pub,
-  const jbyteArray sig,
-  const jbyteArray digest
-) {
-  jsize pub_length = env->GetArrayLength(pub);
-  if (pub_length != 33 && pub_length != 65) {
-    return 0;
-  }
-
-  if (env->GetArrayLength(sig) != 64) {
-    return 0;
-  }
-
-  if (env->GetArrayLength(digest) != 32) {
-    return 0;
-  }
-
-  const uint8_t *raw_pub = (uint8_t *) env->GetByteArrayElements(pub, (jboolean *)false);
-  const uint8_t *raw_sig = (uint8_t *) env->GetByteArrayElements(sig, (jboolean *)false);
-  const uint8_t *raw_digest = (uint8_t *) env->GetByteArrayElements(digest, (jboolean *)false);
-
-  int err = ecdsa_verify_digest(&secp256k1, raw_pub, raw_sig, raw_digest);
-
-  if (err != 0) {
-    return 0;
-  }
-
-  return 1;
-}
-
-extern "C"
-JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_ecdsaSignNative(
-  JNIEnv *env,
-  __attribute__((unused)) jclass type,
-  const jbyteArray priv,
-  const jbyteArray digest
-) {
-  if (env->GetArrayLength(priv) != 32) {
-    return NULL;
-  }
-
-  if (env->GetArrayLength(digest) != 32) {
-    return NULL;
-  }
-
-  const uint8_t *raw_priv = (uint8_t *) env->GetByteArrayElements(priv, (jboolean *)false);
-  const uint8_t *raw_digest = (uint8_t *) env->GetByteArrayElements(digest, (jboolean *)false);
-
-  uint8_t *sig = (uint8_t *) malloc(65);
-  int err = ecdsa_sign_digest(&secp256k1, raw_priv, raw_digest, sig + 1, sig, 0);
-
-  if (err != 0) {
-    free(sig);
-    return NULL;
-  }
-  
-  jbyteArray result = env->NewByteArray(65);
-  env->SetByteArrayRegion(result, 0, 65, (const jbyte *)sig);
-  free(sig);
-
-  return result;
-}
-
-#pragma pack(push, 1)
-typedef struct {
-  uint32_t depth;
-  uint32_t child_num;
-  uint8_t chain_code[32];
-  uint8_t private_key[32];
-  uint8_t public_key[33];
-  uint32_t fingerprint;
-} HDNodeData;
-#pragma pack(pop)
-
-void hdnode_read_data(HDNode *node, HDNodeData *data) {
-  uint32_t fp = hdnode_fingerprint(node);
-
-  memcpy(&(data->depth), &(node->depth), sizeof(node->depth));
-  memcpy(&(data->child_num), &(node->child_num), sizeof(node->child_num));
-  memcpy(&(data->chain_code), &(node->chain_code), sizeof(node->chain_code));
-  memcpy(&(data->private_key), &(node->private_key), sizeof(node->private_key));
-  memcpy(&(data->public_key), &(node->public_key), sizeof(node->public_key));
-  memcpy(&(data->fingerprint), &fp, sizeof(fp));
-  fp = 0;
-}
-
-void hdnode_write_data(HDNode *node, HDNodeData *data) {
-  memcpy(&(node->depth), &(data->depth), sizeof(node->depth));
-  memcpy(&(node->child_num), &(data->child_num), sizeof(node->child_num));
-  memcpy(&(node->chain_code), &(data->chain_code), sizeof(node->chain_code));
-  memcpy(&(node->private_key), &(data->private_key), sizeof(node->private_key));
-  memcpy(&(node->public_key), &(data->public_key), sizeof(node->public_key));
-}
-
-extern "C"
-JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_hdNodeFromSeedNative(
-  JNIEnv *env,
-  __attribute__((unused)) jclass type,
-  const jbyteArray seed
-) {
-  if (env->GetArrayLength(seed) != 64) {
-    return NULL;
-  }
-
-  const uint8_t *raw_seed = (uint8_t *) env->GetByteArrayElements(seed, (jboolean *)false);
-
-  HDNode node = {};
-  const char *curve = "secp256k1";
-  int success = hdnode_from_seed(raw_seed, 64, curve, &node);
-
-  if (success != 1) {
-    return NULL;
-  }
-
-  HDNodeData data = {};
-  hdnode_read_data(&node, &data);
-  
-  jbyteArray result = env->NewByteArray(sizeof(data));
-  env->SetByteArrayRegion(result, 0, sizeof(data), (const jbyte *)&data);
+  memzero(raw_priv, ECDSA_KEY_SIZE);
+  memzero(ecdh, pub_size);
+  free(ecdh);
 
   return result;
 }
 
 extern "C"
-JNIEXPORT jbyteArray JNICALL
-Java_com_reactnativecryptolib_CryptoLibModule_hdNodeDeriveNative(
+JNIEXPORT jboolean JNICALL
+Java_com_cryptolib_CryptoLibModule_nativeEcdsaVerify(
   JNIEnv *env,
   __attribute__((unused)) jclass type,
-  const jint derive_type,
-  const jbyteArray node_data,
-  const jlong index
+  jbyteArray pub,
+  jbyteArray sig,
+  jbyteArray digest
 ) {
-  if (env->GetArrayLength(node_data) != sizeof(HDNodeData)) {
+  uint8_t *raw_pub = (uint8_t *) env->GetByteArrayElements(pub, (jboolean *)false);
+  uint8_t *raw_sig = (uint8_t *) env->GetByteArrayElements(sig, (jboolean *)false);
+  uint8_t *raw_digest = (uint8_t *) env->GetByteArrayElements(digest, (jboolean *)false);
+
+  return cryptolib::ecdsaVerify(raw_pub, raw_sig, raw_digest);
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_cryptolib_CryptoLibModule_nativeEcdsaSign(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  jbyteArray priv,
+  jbyteArray digest
+) {
+  uint8_t *raw_priv = (uint8_t *) env->GetByteArrayElements(priv, (jboolean *)false);
+  uint8_t *raw_digest = (uint8_t *) env->GetByteArrayElements(digest, (jboolean *)false);
+
+  uint8_t *sign = (uint8_t *) malloc(ECDSA_SIGN_SIZE);
+
+  if (!cryptolib::ecdsaSign(raw_priv, raw_digest, sign)) {
+    memzero(raw_priv, ECDSA_KEY_SIZE);
     return NULL;
   }
 
-  HDNodeData *data = (HDNodeData *) env->GetByteArrayElements(node_data, (jboolean *)false);
+  jbyteArray result = env->NewByteArray(ECDSA_SIGN_SIZE);
+  env->SetByteArrayRegion(result, 0, ECDSA_SIGN_SIZE, (jbyte *) sign);
 
-  const char *curve = "secp256k1";
-  HDNode node = {};
-  hdnode_write_data(&node, data);
-  node.curve = get_curve_by_name(curve);
-
-  int success = 0;
-
-  if (derive_type == DERIVE_PRIVATE) {
-    success = hdnode_private_ckd(&node, index);
-  } else {
-    success = hdnode_public_ckd(&node, index);
-  }
-
-  if (success != 1) {
-    memzero(&node, sizeof(node));
-    memzero(data, sizeof(HDNodeData));
-    return NULL;
-  }
-
-  hdnode_read_data(&node, data);
-  
-  jbyteArray result = env->NewByteArray(sizeof(*data));
-  env->SetByteArrayRegion(result, 0, sizeof(*data), (const jbyte *)data);
-
-  memzero(&node, sizeof(node));
-  memzero(data, sizeof(HDNodeData));
+  memzero(raw_priv, ECDSA_KEY_SIZE);
+  free(sign);
 
   return result;
 }
