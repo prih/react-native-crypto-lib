@@ -7,6 +7,7 @@ import {
   bip39,
   bip32,
   // ecdsa,
+  aes,
 } from 'react-native-crypto-lib';
 import { Buffer } from 'buffer';
 
@@ -246,6 +247,17 @@ async function test() {
   }
 
   // console.log(await (await ecdsa.ecdsaRandomPrivate()).toString('hex'));
+
+  const key = await rng.randomBytes(32);
+  const iv = await rng.randomBytes(16);
+  const data_enc = await rng.randomBytes(200);
+
+  const enc = await aes.encrypt(key, iv, data_enc);
+  const dec = await aes.decrypt(key, iv, enc);
+
+  if (dec.compare(data_enc) !== 0) {
+    throw new Error('aes');
+  }
 }
 
 export default function App() {

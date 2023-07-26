@@ -14,6 +14,7 @@
 #include "ecdsa.h"
 #include "secp256k1.h"
 #include "bignum.h"
+#include "aes.h"
 
 namespace cryptolib {
 	double randomNumber() {
@@ -254,5 +255,15 @@ namespace cryptolib {
 			return false;
 		}
 		return true;
+	}
+
+	size_t paddingSize(size_t origSize, size_t blockSize, AESPaddingMode paddingMode) {
+		if (origSize % blockSize == 0) {
+			if (paddingMode == AESPaddingModePKCS7) {
+				return blockSize;
+			}
+			return 0;
+		}
+		return blockSize - origSize % blockSize;
 	}
 }

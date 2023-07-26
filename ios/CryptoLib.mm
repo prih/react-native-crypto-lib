@@ -1,7 +1,10 @@
 #import "CryptoLib.h"
 
+#include <cstring>
+
 #import "memzero.h"
 #import "bip32.h"
+#import "aes.h"
 
 @implementation CryptoLib
 RCT_EXPORT_MODULE()
@@ -493,5 +496,115 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   return [result base64EncodedStringWithOptions:0];
 }
 
+RCT_EXPORT_METHOD(
+  encrypt:(NSString *)key
+  withIv:(NSString *)iv
+  withData:(NSString *)data
+  withPaddingMode:(int)paddingMode
+  resolver:(RCTPromiseResolveBlock)resolve
+  rejecter:(RCTPromiseRejectBlock)reject
+) {
+  NSData *raw_key = [[NSData alloc]initWithBase64EncodedString:key options:0];
+  NSData *raw_iv = [[NSData alloc]initWithBase64EncodedString:iv options:0];
+  NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
+
+  aes_encrypt_ctx ctx;
+
+  if (aes_encrypt_key256((uint8_t *)[raw_key bytes], &ctx) == EXIT_FAILURE) {
+    reject(@"failure", @"invalid key", nil);
+    return;
+  }
+
+  uint8_t *iv_bytes = (uint8_t *)[raw_iv bytes];
+  uint8_t *data_bytes = (uint8_t *)[raw_data bytes];
+  size_t dataSize = [raw_data length];
+
+  size_t padding = cryptolib::paddingSize(
+    [raw_data length],
+    AES_BLOCK_SIZE,
+    (AESPaddingMode) paddingMode
+  );
+  size_t resultSize = dataSize + padding;
+  size_t idx;
+
+  uint8_t *result = (uint8_t *) malloc(resultSize);
+
+  for (idx = 0; idx < resultSize - AES_BLOCK_SIZE; idx += AES_BLOCK_SIZE) {
+    aes_cbc_encrypt(data_bytes + idx, result + idx, AES_BLOCK_SIZE, iv_bytes, &ctx);
+  }
+
+  if (idx < resultSize) {
+    uint8_t padded[AES_BLOCK_SIZE] = {0};
+    if (paddingMode == AESPaddingModePKCS7) {
+      std::memset(padded, static_cast<int>(padding), AES_BLOCK_SIZE);
+    }
+    std::memcpy(padded, data_bytes + idx, dataSize - idx);
+    aes_cbc_encrypt(padded, result + idx, AES_BLOCK_SIZE, iv_bytes, &ctx);
+  }
+
+  NSData *out = [NSData dataWithBytes:result length:resultSize];
+  
+  memzero((void *)[raw_key bytes], [raw_key length]);
+  memzero((void *)[raw_iv bytes], [raw_iv length]);
+  memzero((void *)[raw_data bytes], [raw_data length]);
+
+  free(result);
+
+  resolve([out base64EncodedStringWithOptions:0]);
+}
+
+RCT_EXPORT_METHOD(
+  decrypt:(NSString *)key
+  withIv:(NSString *)iv
+  withData:(NSString *)data
+  withPaddingMode:(int)paddingMode
+  resolver:(RCTPromiseResolveBlock)resolve
+  rejecter:(RCTPromiseRejectBlock)reject
+) {
+  NSData *raw_key = [[NSData alloc]initWithBase64EncodedString:key options:0];
+  NSData *raw_iv = [[NSData alloc]initWithBase64EncodedString:iv options:0];
+  NSData *raw_data = [[NSData alloc]initWithBase64EncodedString:data options:0];
+
+  uint8_t *iv_bytes = (uint8_t *)[raw_iv bytes];
+  uint8_t *data_bytes = (uint8_t *)[raw_data bytes];
+  size_t dataSize = [raw_data length];
+
+  if (dataSize % AES_BLOCK_SIZE != 0) {
+    reject(@"failure", @"data size", nil);
+    return;
+  }
+
+  aes_decrypt_ctx ctx;
+
+  if (aes_decrypt_key256((uint8_t *)[raw_key bytes], &ctx) == EXIT_FAILURE) {
+    reject(@"failure", @"invalid key", nil);
+    return;
+  }
+
+  uint8_t *result = (uint8_t *) malloc(dataSize);
+
+  for (size_t i = 0; i < dataSize; i += AES_BLOCK_SIZE) {
+    aes_cbc_decrypt(data_bytes + i, result + i, AES_BLOCK_SIZE, iv_bytes, &ctx);
+  }
+
+  size_t resultSize = dataSize;
+
+  if (paddingMode == AESPaddingModePKCS7 && dataSize > 0) {
+    size_t paddingSize = result[dataSize - 1];
+    if (paddingSize <= dataSize) {
+      resultSize = resultSize - paddingSize;
+    }
+  }
+
+  NSData *out = [NSData dataWithBytes:result length:resultSize];
+  
+  memzero((void *)[raw_key bytes], [raw_key length]);
+  memzero((void *)[raw_iv bytes], [raw_iv length]);
+  memzero((void *)[raw_data bytes], [raw_data length]);
+
+  free(result);
+
+  resolve([out base64EncodedStringWithOptions:0]);
+}
 
 @end

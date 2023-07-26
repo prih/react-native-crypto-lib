@@ -22,6 +22,11 @@ enum BIP32_DERIVE_TYPE {
   DERIVE_PUBLIC,
 };
 
+enum AESPaddingMode {
+  AESPaddingModeZero = 0,
+  AESPaddingModePKCS7 = 1,
+};
+
 #define ECDSA_KEY_SIZE 32
 #define ECDSA_KEY_33_SIZE 33
 #define ECDSA_KEY_65_SIZE 65
@@ -63,6 +68,9 @@ namespace cryptolib {
   bool ecdsaEcdh(uint8_t *pub, uint8_t *pk, uint8_t *out, bool compact);
   bool ecdsaVerify(uint8_t *pub, uint8_t *sig, uint8_t *digest);
   bool ecdsaSign(uint8_t *pk, uint8_t *digest, uint8_t *out);
+
+  // AES
+  size_t paddingSize(size_t origSize, size_t blockSize, AESPaddingMode paddingMode);
 }
 
 #endif /* CRYPTOLIB_H */
