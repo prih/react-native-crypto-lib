@@ -6,7 +6,7 @@ set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 11)
 
 file(GLOB_RECURSE lib_sources RELATIVE ${CMAKE_SOURCE_DIR}
-  ../crypto/*.c
+        ../crypto/*.c
 )
 
 add_library(cryptolib
@@ -20,6 +20,7 @@ add_library(cryptolib
 include_directories(
             ../cpp
             ../crypto
+            ../crypto/aes
 )
 
 target_compile_options(cryptolib

@@ -520,7 +520,7 @@ RCT_EXPORT_METHOD(
   size_t dataSize = [raw_data length];
 
   size_t padding = cryptolib::paddingSize(
-    [raw_data length],
+    dataSize,
     AES_BLOCK_SIZE,
     (AESPaddingMode) paddingMode
   );

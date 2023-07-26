@@ -1,10 +1,12 @@
 #include <jni.h>
 #include <cstdlib>
+#include <cstring>
 #include <stdexcept>
 #include "react-native-crypto-lib.h"
 
 #include "memzero.h"
 #include "bip32.h"
+#include "aes.h"
 
 extern "C"
 JNIEXPORT jdouble JNICALL
@@ -548,4 +550,121 @@ Java_com_cryptolib_CryptoLibModule_nativeEcdsaSign(
   free(sign);
 
   return result;
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_cryptolib_CryptoLibModule_nativeEncrypt(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  jbyteArray key,
+  jbyteArray iv,
+  jbyteArray data,
+  jint paddingMode
+) {
+  uint8_t *key_bytes = (uint8_t *) env->GetByteArrayElements(key, (jboolean *)false);
+  uint8_t *iv_bytes = (uint8_t *) env->GetByteArrayElements(iv, (jboolean *)false);
+  uint8_t *data_bytes = (uint8_t *) env->GetByteArrayElements(data, (jboolean *)false);
+
+  size_t dataSize = env->GetArrayLength(data);
+
+  aes_encrypt_ctx ctx;
+
+  if (aes_encrypt_key256(key_bytes, &ctx) == EXIT_FAILURE) {
+    memzero(key_bytes, 32);
+    memzero(iv_bytes, 16);
+    memzero(data_bytes, dataSize);
+
+    return NULL;
+  }
+
+  size_t padding = cryptolib::paddingSize(
+    dataSize,
+    AES_BLOCK_SIZE,
+    static_cast<AESPaddingMode>(paddingMode)
+  );
+  size_t resultSize = dataSize + padding;
+  size_t idx;
+
+  uint8_t *result = (uint8_t *) malloc(resultSize);
+
+  for (idx = 0; idx < resultSize - AES_BLOCK_SIZE; idx += AES_BLOCK_SIZE) {
+    aes_cbc_encrypt(data_bytes + idx, result + idx, AES_BLOCK_SIZE, iv_bytes, &ctx);
+  }
+
+  if (idx < resultSize) {
+    uint8_t padded[AES_BLOCK_SIZE] = {0};
+    if (paddingMode == AESPaddingModePKCS7) {
+      std::memset(padded, static_cast<int>(padding), AES_BLOCK_SIZE);
+    }
+    std::memcpy(padded, data_bytes + idx, dataSize - idx);
+    aes_cbc_encrypt(padded, result + idx, AES_BLOCK_SIZE, iv_bytes, &ctx);
+  }
+
+  jbyteArray out = env->NewByteArray(resultSize);
+  env->SetByteArrayRegion(out, 0, resultSize, (jbyte *) result);
+
+  memzero(key_bytes, 32);
+  memzero(iv_bytes, 16);
+  memzero(data_bytes, dataSize);
+
+  free(result);
+
+  return out;
+}
+
+extern "C"
+JNIEXPORT jbyteArray JNICALL
+Java_com_cryptolib_CryptoLibModule_nativeDecrypt(
+  JNIEnv *env,
+  __attribute__((unused)) jclass type,
+  jbyteArray key,
+  jbyteArray iv,
+  jbyteArray data,
+  jint paddingMode
+) {
+  uint8_t *key_bytes = (uint8_t *) env->GetByteArrayElements(key, (jboolean *)false);
+  uint8_t *iv_bytes = (uint8_t *) env->GetByteArrayElements(iv, (jboolean *)false);
+  uint8_t *data_bytes = (uint8_t *) env->GetByteArrayElements(data, (jboolean *)false);
+
+  size_t dataSize = env->GetArrayLength(data);
+
+  if (dataSize % AES_BLOCK_SIZE != 0) {
+    memzero(key_bytes, 32);
+    memzero(iv_bytes, 16);
+    return NULL;
+  }
+
+  aes_decrypt_ctx ctx;
+
+  if (aes_decrypt_key256(key_bytes, &ctx) == EXIT_FAILURE) {
+    memzero(key_bytes, 32);
+    memzero(iv_bytes, 16);
+    return NULL;
+  }
+
+  uint8_t *result = (uint8_t *) malloc(dataSize);
+
+  for (size_t i = 0; i < dataSize; i += AES_BLOCK_SIZE) {
+    aes_cbc_decrypt(data_bytes + i, result + i, AES_BLOCK_SIZE, iv_bytes, &ctx);
+  }
+
+  size_t resultSize = dataSize;
+
+  if (paddingMode == AESPaddingModePKCS7 && dataSize > 0) {
+    size_t paddingSize = result[dataSize - 1];
+    if (paddingSize <= dataSize) {
+      resultSize = resultSize - paddingSize;
+    }
+  }
+
+  jbyteArray out = env->NewByteArray(resultSize);
+  env->SetByteArrayRegion(out, 0, resultSize, (jbyte *) result);
+
+  memzero(key_bytes, 32);
+  memzero(iv_bytes, 16);
+
+  free(result);
+
+  return out;
 }

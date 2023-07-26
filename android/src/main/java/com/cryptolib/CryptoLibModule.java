@@ -55,6 +55,9 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
   private static native boolean nativeEcdsaVerify(byte[] pub, byte[] sig, byte[] digest);
   private static native byte[] nativeEcdsaSign(byte[] priv, byte[] digest);
 
+  private static native byte[] nativeEncrypt(byte[] key, byte[] iv, byte[] data, int paddingMode);
+  private static native byte[] nativeDecrypt(byte[] key, byte[] iv, byte[] data, int paddingMode);
+
   @ReactMethod
   public void randomNumber(Promise promise) {
     promise.resolve(nativeRandomNumber());
@@ -247,5 +250,49 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     byte[] sign = nativeEcdsaSign(priv_bytes, digest_bytes);
 
     return Base64.encodeToString(sign, Base64.NO_WRAP);
+  }
+
+  @ReactMethod
+  public void encrypt(
+    final String key,
+    final String iv,
+    final String data,
+    final int paddingMode,
+    Promise promise
+  ) {
+    byte[] key_bytes = Base64.decode(key, Base64.NO_PADDING);
+    byte[] iv_bytes = Base64.decode(iv, Base64.NO_PADDING);
+    byte[] data_bytes = Base64.decode(data, Base64.NO_PADDING);
+
+    byte[] result = nativeEncrypt(key_bytes, iv_bytes, data_bytes, paddingMode);
+
+    if (result == null) {
+      promise.reject("Error", "encrypt error");
+      return;
+    }
+
+    promise.resolve(Base64.encodeToString(result, Base64.NO_WRAP));
+  }
+
+  @ReactMethod
+  public void decrypt(
+          final String key,
+          final String iv,
+          final String data,
+          final int paddingMode,
+          Promise promise
+  ) {
+    byte[] key_bytes = Base64.decode(key, Base64.NO_PADDING);
+    byte[] iv_bytes = Base64.decode(iv, Base64.NO_PADDING);
+    byte[] data_bytes = Base64.decode(data, Base64.NO_PADDING);
+
+    byte[] result = nativeDecrypt(key_bytes, iv_bytes, data_bytes, paddingMode);
+
+    if (result == null) {
+      promise.reject("Error", "decrypt error");
+      return;
+    }
+
+    promise.resolve(Base64.encodeToString(result, Base64.NO_WRAP));
   }
 }
