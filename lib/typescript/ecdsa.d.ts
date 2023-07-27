@@ -14,5 +14,6 @@ export declare const ecdsaRecover: (sign: Buffer, recId: number, digest: Buffer)
 export declare const ecdsaEcdh: (pub: Buffer, priv: Buffer, compact?: boolean, hash?: HASH) => Buffer;
 export declare const ecdsaVerify: (pub: Buffer, sign: Buffer, digest: Buffer) => boolean;
 export declare const ecdsaSign: (priv: Buffer, digest: Buffer) => SignResult;
+export declare const ecdsaSignAsync: (priv: Buffer, digest: Buffer) => Promise<SignResult>;
 export {};
 //# sourceMappingURL=ecdsa.d.ts.map

@@ -101,3 +101,20 @@ export const ecdsaSign = (priv: Buffer, digest: Buffer): SignResult => {
     recId: Number(res[0]),
   };
 };
+
+export const ecdsaSignAsync = async (
+  priv: Buffer,
+  digest: Buffer
+): Promise<SignResult> => {
+  const sign = await CryptoLibNative.ecdsaSignAsync(
+    priv.toString('base64'),
+    digest.toString('base64')
+  );
+
+  const res = Buffer.from(sign, 'base64');
+
+  return {
+    signature: res.slice(1),
+    recId: Number(res[0]),
+  };
+};

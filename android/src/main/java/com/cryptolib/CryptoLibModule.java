@@ -253,6 +253,25 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
+  public void ecdsaSignAsync(
+    final String priv,
+    final String digest,
+    Promise promise
+  ) {
+    byte[] priv_bytes = Base64.decode(priv, Base64.NO_PADDING);
+    byte[] digest_bytes = Base64.decode(digest, Base64.NO_PADDING);
+
+    byte[] sign = nativeEcdsaSign(priv_bytes, digest_bytes);
+
+    if (sign == null) {
+      promise.reject("Error", "sign error");
+      return;
+    }
+
+    promise.resolve(Base64.encodeToString(sign, Base64.NO_WRAP));
+  }
+
+  @ReactMethod
   public void encrypt(
     final String key,
     final String iv,

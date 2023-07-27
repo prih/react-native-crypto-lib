@@ -497,6 +497,32 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 }
 
 RCT_EXPORT_METHOD(
+  ecdsaSignAsync:(NSString *)priv
+  withDigest:(NSString *)digest
+  resolver:(RCTPromiseResolveBlock)resolve
+  rejecter:(RCTPromiseRejectBlock)reject
+) {
+  NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
+  NSData *raw_digest = [[NSData alloc]initWithBase64EncodedString:digest options:0];
+
+  uint8_t *sign = (uint8_t *) malloc(ECDSA_SIGN_SIZE);
+
+  if (!cryptolib::ecdsaSign((uint8_t *)[raw_priv bytes], (uint8_t *)[raw_digest bytes], sign)) {
+    reject(@"Error", @"sign error", nil);
+    return;
+  }
+
+  NSData *result = [NSData dataWithBytes:sign length:ECDSA_SIGN_SIZE];
+  
+  memzero(sign, sizeof(ECDSA_SIGN_SIZE));
+  memzero((void *)[raw_priv bytes], [raw_priv length]);
+  memzero((void *)[raw_digest bytes], [raw_digest length]);
+  free(sign);
+
+  resolve([result base64EncodedStringWithOptions:0]);
+}
+
+RCT_EXPORT_METHOD(
   encrypt:(NSString *)key
   withIv:(NSString *)iv
   withData:(NSString *)data
