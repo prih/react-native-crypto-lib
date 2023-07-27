@@ -13,7 +13,7 @@ type Bip32Curve =
   | 'ed25519-keccak'
   | 'curve25519';
 
-type HDNode = {
+export type HDNode = {
   depth: number;
   child_num: number;
   chain_code: string;
