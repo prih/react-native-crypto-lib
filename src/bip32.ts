@@ -2,7 +2,7 @@ import { NativeModules } from 'react-native';
 
 const { CryptoLib: CryptoLibNative } = NativeModules;
 
-type Bip32Curve =
+export type Bip32Curve =
   | 'secp256k1'
   | 'secp256k1-decred'
   | 'secp256k1-groestl'
