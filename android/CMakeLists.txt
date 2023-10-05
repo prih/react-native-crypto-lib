@@ -5,17 +5,14 @@ project(CryptoLib)
 set (CMAKE_VERBOSE_MAKEFILE ON)
 set (CMAKE_CXX_STANDARD 11)
 
-file(GLOB lib_sources RELATIVE ${CMAKE_SOURCE_DIR}
+file(GLOB_RECURSE lib_sources RELATIVE ${CMAKE_SOURCE_DIR}
         ../crypto/*.c
-        ../crypto/aes/*.c
-        ../crypto/chacha20poly1305/*.c
-        ../crypto/ed25519-donna/*.c
 )
 
 file(GLOB lib_secp256k1 RELATIVE ${CMAKE_SOURCE_DIR}
-        ../crypto/secp256k1/src/precomputed_ecmult.c
-        ../crypto/secp256k1/src/precomputed_ecmult_gen.c
-        ../crypto/secp256k1/src/secp256k1.c
+        ../vendor/secp256k1-zkp/src/precomputed_ecmult.c
+        ../vendor/secp256k1-zkp/src/precomputed_ecmult_gen.c
+        ../vendor/secp256k1-zkp/src/secp256k1.c
 )
 
 add_library(cryptolib
@@ -31,7 +28,6 @@ include_directories(
             ../cpp
             ../crypto
             ../crypto/aes
-            ../crypto/secp256k1/include
 )
 
 target_compile_options(cryptolib

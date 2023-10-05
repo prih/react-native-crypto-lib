@@ -17,13 +17,11 @@ Pod::Spec.new do |s|
 
   s.source_files =  "ios/**/*.{h,m,mm}",
                     "cpp/**/*.{hpp,cpp,c,h}",
-                    "crypto/*.{h,c}",
-                    "crypto/aes/*.{h,c}",
-                    "crypto/chacha20poly1305/*.{h,c}",
-                    "crypto/ed25519-donna/*.{h,c}",
-                    "crypto/secp256k1/src/precomputed_ecmult.c",
-                    "crypto/secp256k1/src/precomputed_ecmult_gen.c",
-                    "crypto/secp256k1/src/secp256k1.c"
+                    "crypto/**/*.{h,c}",
+                    "vendor/secp256k1-zkp/**/*.h",
+                    "vendor/secp256k1-zkp/src/precomputed_ecmult.c",
+                    "vendor/secp256k1-zkp/src/precomputed_ecmult_gen.c",
+                    "vendor/secp256k1-zkp/src/secp256k1.c"
 
   s.compiler_flags = secp256k1_compiler_flags
 
