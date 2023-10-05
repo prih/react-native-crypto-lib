@@ -5,6 +5,8 @@
 #import "memzero.h"
 #import "bip32.h"
 #import "aes.h"
+#import "zkp_bip340.h"
+#import "zkp_context.h"
 
 @implementation CryptoLib
 RCT_EXPORT_MODULE()
@@ -483,6 +485,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   uint8_t *sign = (uint8_t *) malloc(ECDSA_SIGN_SIZE);
 
   if (!cryptolib::ecdsaSign((uint8_t *)[raw_priv bytes], (uint8_t *)[raw_digest bytes], sign)) {
+    free(sign);
     @throw [NSException exceptionWithName:@"Error" reason:@"sign error" userInfo:nil];
   }
 
@@ -508,6 +511,7 @@ RCT_EXPORT_METHOD(
   uint8_t *sign = (uint8_t *) malloc(ECDSA_SIGN_SIZE);
 
   if (!cryptolib::ecdsaSign((uint8_t *)[raw_priv bytes], (uint8_t *)[raw_digest bytes], sign)) {
+    free(sign);
     reject(@"Error", @"sign error", nil);
     return;
   }
@@ -631,6 +635,132 @@ RCT_EXPORT_METHOD(
   free(result);
 
   resolve([out base64EncodedStringWithOptions:0]);
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  schnorrGetPublic:(NSString *)priv
+) {
+  NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
+
+  if (!zkp_context_is_initialized()) {
+    if (zkp_context_init() == EXIT_FAILURE) {
+      @throw [NSException exceptionWithName:@"Error" reason:@"context init error" userInfo:nil];
+    }
+  }
+
+  uint8_t *pub = (uint8_t *) malloc(SCHNORR_PUBLIC_KEY_SIZE);
+
+  if (zkp_bip340_get_public_key((uint8_t *)[raw_priv bytes], pub) == EXIT_FAILURE) {
+    zkp_context_destroy();
+    free(pub);
+    @throw [NSException exceptionWithName:@"Error" reason:@"pub key error" userInfo:nil];
+  }
+
+  zkp_context_destroy();
+
+  NSData *result = [NSData dataWithBytes:pub length:SCHNORR_PUBLIC_KEY_SIZE];
+  
+  memzero(pub, sizeof(SCHNORR_PUBLIC_KEY_SIZE));
+  memzero((void *)[raw_priv bytes], [raw_priv length]);
+  free(pub);
+
+  return [result base64EncodedStringWithOptions:0];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  schnorrSign:(NSString *)priv
+  withDigest:(NSString *)digest
+) {
+  NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
+  NSData *raw_digest = [[NSData alloc]initWithBase64EncodedString:digest options:0];
+
+  if (!zkp_context_is_initialized()) {
+    if (zkp_context_init() == EXIT_FAILURE) {
+      @throw [NSException exceptionWithName:@"Error" reason:@"context init error" userInfo:nil];
+    }
+  }
+
+  uint8_t *sign = (uint8_t *) malloc(SCHNORR_SIGN_SIZE);
+
+  if (zkp_bip340_sign_digest((uint8_t *)[raw_priv bytes], (uint8_t *)[raw_digest bytes], sign, 0) != 0) {
+    zkp_context_destroy();
+    free(sign);
+    @throw [NSException exceptionWithName:@"Error" reason:@"sign error" userInfo:nil];
+  }
+
+  zkp_context_destroy();
+
+  NSData *result = [NSData dataWithBytes:sign length:SCHNORR_SIGN_SIZE];
+  
+  memzero(sign, sizeof(SCHNORR_SIGN_SIZE));
+  memzero((void *)[raw_priv bytes], [raw_priv length]);
+  memzero((void *)[raw_digest bytes], [raw_digest length]);
+  free(sign);
+
+  return [result base64EncodedStringWithOptions:0];
+}
+
+RCT_EXPORT_METHOD(
+  schnorrSignAsync:(NSString *)priv
+  withDigest:(NSString *)digest
+  resolver:(RCTPromiseResolveBlock)resolve
+  rejecter:(RCTPromiseRejectBlock)reject
+) {
+  NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
+  NSData *raw_digest = [[NSData alloc]initWithBase64EncodedString:digest options:0];
+
+  if (!zkp_context_is_initialized()) {
+    if (zkp_context_init() == EXIT_FAILURE) {
+      @throw [NSException exceptionWithName:@"Error" reason:@"context init error" userInfo:nil];
+    }
+  }
+
+  uint8_t *sign = (uint8_t *) malloc(SCHNORR_SIGN_SIZE);
+
+  if (zkp_bip340_sign_digest((uint8_t *)[raw_priv bytes], (uint8_t *)[raw_digest bytes], sign, 0) != 0) {
+    zkp_context_destroy();
+    free(sign);
+    @throw [NSException exceptionWithName:@"Error" reason:@"sign error" userInfo:nil];
+  }
+
+  zkp_context_destroy();
+
+  NSData *result = [NSData dataWithBytes:sign length:SCHNORR_SIGN_SIZE];
+  
+  memzero(sign, sizeof(SCHNORR_SIGN_SIZE));
+  memzero((void *)[raw_priv bytes], [raw_priv length]);
+  memzero((void *)[raw_digest bytes], [raw_digest length]);
+  free(sign);
+
+  resolve([result base64EncodedStringWithOptions:0]);
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  schnorrVerify:(NSString *)pub
+  withSign:(NSString *)sign
+  withDigest:(NSString *)digest
+) {
+  NSData *raw_pub = [[NSData alloc]initWithBase64EncodedString:pub options:0];
+  NSData *raw_sign = [[NSData alloc]initWithBase64EncodedString:sign options:0];
+  NSData *raw_digest = [[NSData alloc]initWithBase64EncodedString:digest options:0];
+
+  if (!zkp_context_is_initialized()) {
+    if (zkp_context_init() == EXIT_FAILURE) {
+      @throw [NSException exceptionWithName:@"Error" reason:@"context init error" userInfo:nil];
+    }
+  }
+
+  if (zkp_bip340_verify_digest(
+    (uint8_t *)[raw_pub bytes],
+    (uint8_t *)[raw_sign bytes],
+    (uint8_t *)[raw_digest bytes]
+  ) == EXIT_FAILURE) {
+    zkp_context_destroy();
+    return [NSNumber numberWithInt: 0];
+  }
+
+  zkp_context_destroy();
+  return [NSNumber numberWithInt: 1];
 }
 
 @end

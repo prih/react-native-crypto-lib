@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __ZKP_BIP340_H__
 #define __ZKP_BIP340_H__
 
@@ -19,4 +23,8 @@ int zkp_bip340_tweak_private_key(const uint8_t *internal_private_key,
                                  const uint8_t *root_hash,
                                  uint8_t *output_private_key);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

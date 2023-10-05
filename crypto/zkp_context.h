@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __ZKP_CONTEXT_H__
 #define __ZKP_CONTEXT_H__
 
@@ -13,4 +17,8 @@ const secp256k1_context *zkp_context_get_read_only(void);
 secp256k1_context *zkp_context_acquire_writable(void);
 void zkp_context_release_writable(void);
 
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif

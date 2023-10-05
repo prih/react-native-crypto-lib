@@ -8,6 +8,7 @@ import {
   bip32,
   // ecdsa,
   aes,
+  schnorr,
 } from 'react-native-crypto-lib';
 import { Buffer } from 'buffer';
 
@@ -257,6 +258,35 @@ async function test() {
 
   if (dec.compare(data_enc) !== 0) {
     throw new Error('aes');
+  }
+
+  const bip340_key = Buffer.from(
+    'f264525cad8c9292982e31f2253bcbd587ffd1b99b498760d99ffaaed991d0b4',
+    'hex'
+  );
+  const bip340_digest = Buffer.from(
+    '054edec1d0211f624fed0cbca9d4f9400b0e491c43742af2c5b0abebf0c990d8',
+    'hex'
+  );
+  const bip340_sign = schnorr.sign(bip340_key, bip340_digest);
+
+  if (
+    bip340_sign.toString('base64') !==
+    '36f0KpZUEHqZL1Zrepm+E57RQy8mkdd1K2B0G8jBXRXBiEVLWNOR1hxQRqYVfl6qHJpjFoRHl2j4JaorYlCy8Q=='
+  ) {
+    throw new Error('schnorr sign');
+  }
+  const bip340_pub = schnorr.getPublic(bip340_key);
+  // // console.log(bip340_pub.toString('hex'), bip340_pub.length);
+  // // if (
+  // //   bip340_pub.toString('hex') !==
+  // //   '8fd2f4fef59fb2e58553563ad62660f56c27a4e5bf6a8ec8c3ac0401edd5252d'
+  // // ) {
+  // //   throw new Error('schnorr pub');
+  // // }
+  const bip340_verify = schnorr.verify(bip340_pub, bip340_sign, bip340_digest);
+  if (!bip340_verify) {
+    throw new Error('schnorr verify');
   }
 }
 

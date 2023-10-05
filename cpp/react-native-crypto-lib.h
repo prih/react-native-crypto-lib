@@ -32,6 +32,10 @@ enum AESPaddingMode {
 #define ECDSA_KEY_65_SIZE 65
 #define ECDSA_SIGN_SIZE 65
 
+#define SCHNORR_PRIVATE_KEY_SIZE 32
+#define SCHNORR_PUBLIC_KEY_SIZE 32
+#define SCHNORR_SIGN_SIZE 64
+
 namespace cryptolib {
   // rng
   double randomNumber();
