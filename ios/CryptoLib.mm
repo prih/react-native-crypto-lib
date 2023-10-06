@@ -682,7 +682,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 
   uint8_t *sign = (uint8_t *) malloc(SCHNORR_SIGN_SIZE);
 
-  if (zkp_bip340_sign_digest((uint8_t *)[raw_priv bytes], (uint8_t *)[raw_digest bytes], sign, 0) != 0) {
+  if (zkp_bip340_sign_digest((uint8_t *)[raw_priv bytes], (uint8_t *)[raw_digest bytes], sign, 0) == EXIT_FAILURE) {
     zkp_context_destroy();
     free(sign);
     @throw [NSException exceptionWithName:@"Error" reason:@"sign error" userInfo:nil];
@@ -717,7 +717,7 @@ RCT_EXPORT_METHOD(
 
   uint8_t *sign = (uint8_t *) malloc(SCHNORR_SIGN_SIZE);
 
-  if (zkp_bip340_sign_digest((uint8_t *)[raw_priv bytes], (uint8_t *)[raw_digest bytes], sign, 0) != 0) {
+  if (zkp_bip340_sign_digest((uint8_t *)[raw_priv bytes], (uint8_t *)[raw_digest bytes], sign, 0) == EXIT_FAILURE) {
     zkp_context_destroy();
     free(sign);
     @throw [NSException exceptionWithName:@"Error" reason:@"sign error" userInfo:nil];
@@ -761,6 +761,74 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 
   zkp_context_destroy();
   return [NSNumber numberWithInt: 1];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  schnorrTweakPublic:(NSString *)pub
+  withRoot:(NSString *)root
+) {
+  NSData *raw_pub = [[NSData alloc]initWithBase64EncodedString:pub options:0];
+  NSData *raw_root = [[NSData alloc]initWithBase64EncodedString:root options:0];
+
+  if (!zkp_context_is_initialized()) {
+    if (zkp_context_init() == EXIT_FAILURE) {
+      @throw [NSException exceptionWithName:@"Error" reason:@"context init error" userInfo:nil];
+    }
+  }
+
+  uint8_t *tweak = (uint8_t *) malloc(SCHNORR_PUBLIC_KEY_SIZE);
+
+  if (zkp_bip340_tweak_public_key(
+    (uint8_t *)[raw_pub bytes],
+    (uint8_t *)[raw_root bytes],
+    tweak
+  ) == EXIT_FAILURE) {
+    zkp_context_destroy();
+    free(tweak);
+    @throw [NSException exceptionWithName:@"Error" reason:@"tweak error" userInfo:nil];
+  }
+
+  zkp_context_destroy();
+  
+  NSData *result = [NSData dataWithBytes:tweak length:SCHNORR_PUBLIC_KEY_SIZE];
+  
+  free(tweak);
+
+  return [result base64EncodedStringWithOptions:0];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  schnorrTweakPrivate:(NSString *)priv
+  withRoot:(NSString *)root
+) {
+  NSData *raw_priv = [[NSData alloc]initWithBase64EncodedString:priv options:0];
+  NSData *raw_root = [[NSData alloc]initWithBase64EncodedString:root options:0];
+
+  if (!zkp_context_is_initialized()) {
+    if (zkp_context_init() == EXIT_FAILURE) {
+      @throw [NSException exceptionWithName:@"Error" reason:@"context init error" userInfo:nil];
+    }
+  }
+
+  uint8_t *tweak = (uint8_t *) malloc(SCHNORR_PRIVATE_KEY_SIZE);
+
+  if (zkp_bip340_tweak_private_key(
+    (uint8_t *)[raw_priv bytes],
+    (uint8_t *)[raw_root bytes],
+    tweak
+  ) == EXIT_FAILURE) {
+    zkp_context_destroy();
+    free(tweak);
+    @throw [NSException exceptionWithName:@"Error" reason:@"tweak error" userInfo:nil];
+  }
+
+  zkp_context_destroy();
+  
+  NSData *result = [NSData dataWithBytes:tweak length:SCHNORR_PRIVATE_KEY_SIZE];
+  
+  free(tweak);
+
+  return [result base64EncodedStringWithOptions:0];
 }
 
 @end

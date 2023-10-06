@@ -38,3 +38,23 @@ export function verify(pub: Buffer, sig: Buffer, digest: Buffer): boolean {
   ) as number;
   return valid === 1;
 }
+
+export function tweakPublicKey(pub: Buffer, root?: Buffer): Buffer {
+  return Buffer.from(
+    CryptoLibNative.schnorrTweakPublic(
+      pub.toString('base64'),
+      root ? root.toString('base64') : ''
+    ),
+    'base64'
+  );
+}
+
+export function tweakPrivateKey(priv: Buffer, root?: Buffer): Buffer {
+  return Buffer.from(
+    CryptoLibNative.schnorrTweakPrivate(
+      priv.toString('base64'),
+      root ? root.toString('base64') : ''
+    ),
+    'base64'
+  );
+}

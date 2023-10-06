@@ -260,15 +260,29 @@ async function test() {
     throw new Error('aes');
   }
 
-  const bip340_key = Buffer.from(
-    'f264525cad8c9292982e31f2253bcbd587ffd1b99b498760d99ffaaed991d0b4',
+  const bip340_int_priv = Buffer.from(
+    '9b10e0b0731f6449d89efe28c155b1237c5c1626b271a3b0d317c44e3791a66e',
     'hex'
   );
+  const bip340_int_pub = Buffer.from(
+    '8fd2f4fef59fb2e58553563ad62660f56c27a4e5bf6a8ec8c3ac0401edd5252d',
+    'hex'
+  );
+
+  const bip340_priv = schnorr.tweakPrivateKey(bip340_int_priv);
+
+  if (
+    bip340_priv.toString('hex') !==
+    'f264525cad8c9292982e31f2253bcbd587ffd1b99b498760d99ffaaed991d0b4'
+  ) {
+    throw new Error('tweak priv');
+  }
+
   const bip340_digest = Buffer.from(
     '054edec1d0211f624fed0cbca9d4f9400b0e491c43742af2c5b0abebf0c990d8',
     'hex'
   );
-  const bip340_sign = schnorr.sign(bip340_key, bip340_digest);
+  const bip340_sign = schnorr.sign(bip340_priv, bip340_digest);
 
   if (
     bip340_sign.toString('base64') !==
@@ -276,14 +290,14 @@ async function test() {
   ) {
     throw new Error('schnorr sign');
   }
-  const bip340_pub = schnorr.getPublic(bip340_key);
-  // // console.log(bip340_pub.toString('hex'), bip340_pub.length);
-  // // if (
-  // //   bip340_pub.toString('hex') !==
-  // //   '8fd2f4fef59fb2e58553563ad62660f56c27a4e5bf6a8ec8c3ac0401edd5252d'
-  // // ) {
-  // //   throw new Error('schnorr pub');
-  // // }
+
+  const bip340_priv_pub = schnorr.getPublic(bip340_priv);
+  const bip340_pub = schnorr.tweakPublicKey(bip340_int_pub);
+
+  if (bip340_priv_pub.toString('hex') !== bip340_pub.toString('hex')) {
+    throw new Error('schnorr pub');
+  }
+
   const bip340_verify = schnorr.verify(bip340_pub, bip340_sign, bip340_digest);
   if (!bip340_verify) {
     throw new Error('schnorr verify');
