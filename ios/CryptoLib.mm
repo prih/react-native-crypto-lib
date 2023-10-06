@@ -322,7 +322,7 @@ RCT_REMAP_METHOD(
 
   NSData *result = [NSData dataWithBytes:priv length:ECDSA_KEY_SIZE];
   
-  memzero(priv, sizeof(ECDSA_KEY_SIZE));
+  memzero(priv, ECDSA_KEY_SIZE);
   free(priv);
 
   resolve([result base64EncodedStringWithOptions:0]);
@@ -356,12 +356,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   pub = (uint8_t *) malloc(pub_size);
 
   if (!cryptolib::ecdsaGetPublic((uint8_t *)[raw_priv bytes], pub, compact)) {
+    free(pub);
     @throw [NSException exceptionWithName:@"Error" reason:@"pub key error" userInfo:nil];
   }
 
   NSData *result = [NSData dataWithBytes:pub length:pub_size];
   
-  memzero(pub, sizeof(pub_size));
+  memzero(pub, pub_size);
   memzero((void *)[raw_priv bytes], [raw_priv length]);
   free(pub);
 
@@ -380,12 +381,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   out_pub = (uint8_t *) malloc(pub_size);
 
   if (!cryptolib::ecdsaReadPublic((uint8_t *)[raw_pub bytes], out_pub, compact)) {
+    free(out_pub);
     @throw [NSException exceptionWithName:@"Error" reason:@"pub key error" userInfo:nil];
   }
 
   NSData *result = [NSData dataWithBytes:out_pub length:pub_size];
   
-  memzero(out_pub, sizeof(pub_size));
+  memzero(out_pub, pub_size);
   memzero((void *)[raw_pub bytes], [raw_pub length]);
   free(out_pub);
 
@@ -419,6 +421,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   uint8_t *pub = (uint8_t *) malloc(ECDSA_KEY_65_SIZE);
 
   if (!cryptolib::ecdsaRecover((uint8_t *)[raw_sig bytes], recId, (uint8_t *)[raw_digest bytes], pub)) {
+    free(pub);
     @throw [NSException exceptionWithName:@"Error" reason:@"recover error" userInfo:nil];
   }
 
@@ -442,12 +445,13 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   uint8_t *ecdh = (uint8_t *) malloc(ecdh_size);
 
   if (!cryptolib::ecdsaEcdh((uint8_t *)[raw_pub bytes], (uint8_t *)[raw_priv bytes], ecdh, compact)) {
+    free(ecdh);
     @throw [NSException exceptionWithName:@"Error" reason:@"ecdh error" userInfo:nil];
   }
 
   NSData *result = [NSData dataWithBytes:ecdh length:ecdh_size];
   
-  memzero(ecdh, sizeof(ecdh_size));
+  memzero(ecdh, ecdh_size);
   memzero((void *)[raw_pub bytes], [raw_pub length]);
   memzero((void *)[raw_priv bytes], [raw_priv length]);
   free(ecdh);
@@ -491,7 +495,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 
   NSData *result = [NSData dataWithBytes:sign length:ECDSA_SIGN_SIZE];
   
-  memzero(sign, sizeof(ECDSA_SIGN_SIZE));
+  memzero(sign, ECDSA_SIGN_SIZE);
   memzero((void *)[raw_priv bytes], [raw_priv length]);
   memzero((void *)[raw_digest bytes], [raw_digest length]);
   free(sign);
@@ -518,7 +522,7 @@ RCT_EXPORT_METHOD(
 
   NSData *result = [NSData dataWithBytes:sign length:ECDSA_SIGN_SIZE];
   
-  memzero(sign, sizeof(ECDSA_SIGN_SIZE));
+  memzero(sign, ECDSA_SIGN_SIZE);
   memzero((void *)[raw_priv bytes], [raw_priv length]);
   memzero((void *)[raw_digest bytes], [raw_digest length]);
   free(sign);
@@ -660,7 +664,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 
   NSData *result = [NSData dataWithBytes:pub length:SCHNORR_PUBLIC_KEY_SIZE];
   
-  memzero(pub, sizeof(SCHNORR_PUBLIC_KEY_SIZE));
+  memzero(pub, SCHNORR_PUBLIC_KEY_SIZE);
   memzero((void *)[raw_priv bytes], [raw_priv length]);
   free(pub);
 
@@ -692,7 +696,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
 
   NSData *result = [NSData dataWithBytes:sign length:SCHNORR_SIGN_SIZE];
   
-  memzero(sign, sizeof(SCHNORR_SIGN_SIZE));
+  memzero(sign, SCHNORR_SIGN_SIZE);
   memzero((void *)[raw_priv bytes], [raw_priv length]);
   memzero((void *)[raw_digest bytes], [raw_digest length]);
   free(sign);
@@ -727,7 +731,7 @@ RCT_EXPORT_METHOD(
 
   NSData *result = [NSData dataWithBytes:sign length:SCHNORR_SIGN_SIZE];
   
-  memzero(sign, sizeof(SCHNORR_SIGN_SIZE));
+  memzero(sign, SCHNORR_SIGN_SIZE);
   memzero((void *)[raw_priv bytes], [raw_priv length]);
   memzero((void *)[raw_digest bytes], [raw_digest length]);
   free(sign);

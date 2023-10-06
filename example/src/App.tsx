@@ -278,6 +278,7 @@ async function test() {
     bip340_priv.toString('hex') !==
     'f264525cad8c9292982e31f2253bcbd587ffd1b99b498760d99ffaaed991d0b4'
   ) {
+    console.log(bip340_priv.toString('hex'));
     throw new Error('tweak priv');
   }
 
@@ -342,6 +343,8 @@ async function test() {
   ) {
     throw new Error('bitcoinjs p2tr address');
   }
+
+  console.log('Test OK');
 }
 
 export default function App() {

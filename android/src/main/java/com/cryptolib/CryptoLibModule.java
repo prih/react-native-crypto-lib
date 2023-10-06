@@ -3,6 +3,7 @@ package com.cryptolib;
 import androidx.annotation.NonNull;
 import android.util.Base64;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
@@ -57,6 +58,14 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
 
   private static native byte[] nativeEncrypt(byte[] key, byte[] iv, byte[] data, int paddingMode);
   private static native byte[] nativeDecrypt(byte[] key, byte[] iv, byte[] data, int paddingMode);
+
+  private static native byte[] nativeSchnorrGetPublic(byte[] priv);
+  private static native byte[] nativeSchnorrSign(byte[] priv, byte[] digest);
+  private static native boolean nativeSchnorrVerify(byte[] pub, byte[] sig, byte[] digest);
+  private static native byte[] nativeSchnorrTweakPublic(byte[] pub, byte[] root);
+  private static native byte[] nativeSchnorrTweakPrivate(byte[] priv, byte[] root);
+  private static native boolean nativeSchnorrVerifyPub(byte[] pub);
+  private static native CryptoLibXOnlyPointAddTweak nativeXOnlyPointAddTweak(byte[] pub, byte[] tweak);
 
   @ReactMethod
   public void randomNumber(Promise promise) {
@@ -313,5 +322,107 @@ public class CryptoLibModule extends ReactContextBaseJavaModule {
     }
 
     promise.resolve(Base64.encodeToString(result, Base64.NO_WRAP));
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String schnorrGetPublic(final String priv) {
+    byte[] priv_bytes = Base64.decode(priv, Base64.NO_PADDING);
+
+    byte[] pub = nativeSchnorrGetPublic(priv_bytes);
+
+    return Base64.encodeToString(pub, Base64.NO_WRAP);
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String schnorrSign(final String priv, final String digest) {
+    byte[] priv_bytes = Base64.decode(priv, Base64.NO_PADDING);
+    byte[] digest_bytes = Base64.decode(digest, Base64.NO_PADDING);
+
+    byte[] sign = nativeSchnorrSign(priv_bytes, digest_bytes);
+
+    return Base64.encodeToString(sign, Base64.NO_WRAP);
+  }
+
+  @ReactMethod()
+  public void schnorrSignAsync(
+    final String priv,
+    final String digest,
+    Promise promise
+  ) {
+    byte[] priv_bytes = Base64.decode(priv, Base64.NO_PADDING);
+    byte[] digest_bytes = Base64.decode(digest, Base64.NO_PADDING);
+
+    byte[] sign = nativeSchnorrSign(priv_bytes, digest_bytes);
+
+    if (sign == null) {
+      promise.reject("Error", "sign error");
+      return;
+    }
+    
+    promise.resolve(Base64.encodeToString(sign, Base64.NO_WRAP));
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public int schnorrVerify(final String pub, final String sign, final String digest) {
+    byte[] pub_bytes = Base64.decode(pub, Base64.NO_PADDING);
+    byte[] sign_bytes = Base64.decode(sign, Base64.NO_PADDING);
+    byte[] digest_bytes = Base64.decode(digest, Base64.NO_PADDING);
+
+    if (!nativeSchnorrVerify(pub_bytes, sign_bytes, digest_bytes)) {
+      return 0;
+    }
+    return 1;
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String schnorrTweakPublic(final String pub, final String root) {
+    byte[] pub_bytes = Base64.decode(pub, Base64.NO_PADDING);
+    byte[] root_bytes = null;
+
+    if (root != null && !root.isEmpty()) {
+      root_bytes = Base64.decode(root, Base64.NO_PADDING);
+    }
+
+    byte[] tweak = nativeSchnorrTweakPublic(pub_bytes, root_bytes);
+
+    return Base64.encodeToString(tweak, Base64.NO_WRAP);
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public String schnorrTweakPrivate(final String priv, final String root) {
+    byte[] priv_bytes = Base64.decode(priv, Base64.NO_PADDING);
+    byte[] root_bytes = null;
+
+    if (root != null && !root.isEmpty()) {
+      root_bytes = Base64.decode(root, Base64.NO_PADDING);
+    }
+
+    byte[] tweak = nativeSchnorrTweakPrivate(priv_bytes, root_bytes);
+
+    return Base64.encodeToString(tweak, Base64.NO_WRAP);
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public int schnorrVerifyPub(final String pub) {
+    byte[] pub_bytes = Base64.decode(pub, Base64.NO_PADDING);
+
+    if (!nativeSchnorrVerifyPub(pub_bytes)) {
+      return 0;
+    }
+    return 1;
+  }
+
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  public WritableMap xOnlyPointAddTweak(final String pub, final String tweak) {
+    byte[] pub_bytes = Base64.decode(pub, Base64.NO_PADDING);
+    byte[] tweak_bytes = Base64.decode(tweak, Base64.NO_PADDING);
+
+    CryptoLibXOnlyPointAddTweak node = nativeXOnlyPointAddTweak(pub_bytes, tweak_bytes);
+
+    if (node == null) {
+      return null;
+    }
+
+    return node.getMap();
   }
 }
