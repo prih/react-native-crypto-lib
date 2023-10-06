@@ -357,3 +357,57 @@ int zkp_bip340_tweak_private_key(const uint8_t *internal_private_key,
 
   return result;
 }
+
+// BIP340 Schnorr point add tweak
+// internal_public_key has 32 bytes
+// root_hash has 32 bytes or is empty (NULL)
+// output_public_key has 32 bytes
+// returns 0 on success
+int zkp_bip340_xonly_point_add_tweak(const uint8_t *internal_public_key,
+                                const uint8_t *tweak,
+                                uint8_t *output_public_key,
+                                int *parity) {
+  int result = 0;
+
+  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+
+  secp256k1_xonly_pubkey internal_pubkey = {0};
+  if (result == 0) {
+    if (secp256k1_xonly_pubkey_parse(context_read_only, &internal_pubkey,
+                                     internal_public_key) != 1) {
+      result = -1;
+    }
+  }
+
+  secp256k1_pubkey output_pubkey = {0};
+  if (result == 0) {
+    if (secp256k1_xonly_pubkey_tweak_add(context_read_only, &output_pubkey,
+                                         &internal_pubkey, tweak) != 1) {
+      result = -1;
+    }
+  }
+
+  memzero(&internal_pubkey, sizeof(internal_pubkey));
+
+  secp256k1_xonly_pubkey xonly_output_pubkey = {0};
+  if (result == 0) {
+    if (secp256k1_xonly_pubkey_from_pubkey(context_read_only,
+                                           &xonly_output_pubkey, parity,
+                                           &output_pubkey) != 1) {
+      result = -1;
+    }
+  }
+
+  memzero(&output_pubkey, sizeof(output_pubkey));
+
+  if (result == 0) {
+    if (secp256k1_xonly_pubkey_serialize(context_read_only, output_public_key,
+                                         &xonly_output_pubkey) != 1) {
+      result = -1;
+    }
+  }
+
+  memzero(&xonly_output_pubkey, sizeof(xonly_output_pubkey));
+
+  return result;
+}

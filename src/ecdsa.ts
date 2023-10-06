@@ -35,6 +35,9 @@ export const ecdsaReadPublic = (pub: Buffer, compact = true): Buffer => {
 };
 
 export const ecdsaValidatePublic = (pub: Buffer): boolean => {
+  if (pub.length !== 33 && pub.length !== 65) {
+    return false;
+  }
   const valid = CryptoLibNative.ecdsaValidatePublic(
     pub.toString('base64')
   ) as number;

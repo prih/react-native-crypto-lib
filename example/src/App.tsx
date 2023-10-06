@@ -9,8 +9,11 @@ import {
   // ecdsa,
   aes,
   schnorr,
+  ecc,
 } from 'react-native-crypto-lib';
-import { Buffer } from 'buffer';
+import * as bitcoinjs from 'bitcoinjs-lib';
+
+bitcoinjs.initEccLib(ecc);
 
 async function test() {
   const hmac_key = Buffer.from('01020304050607080102030405060708', 'hex');
@@ -301,6 +304,43 @@ async function test() {
   const bip340_verify = schnorr.verify(bip340_pub, bip340_sign, bip340_digest);
   if (!bip340_verify) {
     throw new Error('schnorr verify');
+  }
+
+  const bip340_pub_verify = schnorr.verifyPublic(bip340_pub);
+  if (!bip340_pub_verify) {
+    throw new Error('schnorr pub verify');
+  }
+
+  const bip340_pub_wrong = Buffer.from(
+    'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',
+    'hex'
+  );
+  if (schnorr.verifyPublic(bip340_pub_wrong)) {
+    throw new Error('schnorr wrong pub verify');
+  }
+
+  const bip340_p2tr_int = bitcoinjs.payments.p2tr({
+    internalPubkey: bip340_int_pub,
+    network: bitcoinjs.networks.testnet,
+  });
+
+  if (
+    bip340_p2tr_int.address !==
+    'tb1pkrel9298crzrl3xuqrntxfsudvyucp6u6pn769pwm3z6wekueqesgqaexe'
+  ) {
+    throw new Error('bitcoinjs p2tr address int');
+  }
+
+  const bip340_p2tr = bitcoinjs.payments.p2tr({
+    pubkey: bip340_pub,
+    network: bitcoinjs.networks.testnet,
+  });
+
+  if (
+    bip340_p2tr.address !==
+    'tb1pkrel9298crzrl3xuqrntxfsudvyucp6u6pn769pwm3z6wekueqesgqaexe'
+  ) {
+    throw new Error('bitcoinjs p2tr address');
   }
 }
 

@@ -831,4 +831,70 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
   return [result base64EncodedStringWithOptions:0];
 }
 
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  schnorrVerifyPub:(NSString *)pub
+) {
+  NSData *raw_pub = [[NSData alloc]initWithBase64EncodedString:pub options:0];
+
+  if (!zkp_context_is_initialized()) {
+    if (zkp_context_init() == EXIT_FAILURE) {
+      @throw [NSException exceptionWithName:@"Error" reason:@"context init error" userInfo:nil];
+    }
+  }
+
+  int result = zkp_bip340_verify_publickey(
+    (uint8_t *)[raw_pub bytes]
+  );
+
+  zkp_context_destroy();
+
+  if (result == EXIT_FAILURE) {
+    return [NSNumber numberWithInt: 0];
+  }
+
+  return [NSNumber numberWithInt: 1];
+}
+
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(
+  xOnlyPointAddTweak:(NSString *)pub
+  withTweak:(NSString *)tweak
+) {
+  NSData *raw_pub = [[NSData alloc]initWithBase64EncodedString:pub options:0];
+  NSData *raw_tweak = [[NSData alloc]initWithBase64EncodedString:tweak options:0];
+
+  if (!zkp_context_is_initialized()) {
+    if (zkp_context_init() == EXIT_FAILURE) {
+      @throw [NSException exceptionWithName:@"Error" reason:@"context init error" userInfo:nil];
+    }
+  }
+
+  uint8_t *tweak_pub = (uint8_t *) malloc(SCHNORR_PUBLIC_KEY_SIZE);
+  int parity = 0;
+
+  if (zkp_bip340_xonly_point_add_tweak(
+    (uint8_t *)[raw_pub bytes],
+    (uint8_t *)[raw_tweak bytes],
+    tweak_pub,
+    &parity
+  ) != 0) {
+    zkp_context_destroy();
+    free(tweak_pub);
+    return NULL;
+  }
+
+  zkp_context_destroy();
+  
+  NSDictionary *result = @{
+    @"parity": [NSNumber numberWithInt: parity],
+    @"xOnlyPubkey": [
+      [NSData dataWithBytes:tweak_pub length: SCHNORR_PUBLIC_KEY_SIZE]
+      base64EncodedStringWithOptions:0
+    ]
+  };
+  
+  free(tweak_pub);
+
+  return result;
+}
+
 @end

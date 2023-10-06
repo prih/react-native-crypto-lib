@@ -58,3 +58,13 @@ export function tweakPrivateKey(priv: Buffer, root?: Buffer): Buffer {
     'base64'
   );
 }
+
+export function verifyPublic(pub: Buffer): boolean {
+  if (pub.length !== 32) {
+    return false;
+  }
+  const valid = CryptoLibNative.schnorrVerifyPub(
+    pub.toString('base64')
+  ) as number;
+  return valid === 1;
+}

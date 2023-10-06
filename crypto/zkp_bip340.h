@@ -22,7 +22,10 @@ int zkp_bip340_tweak_public_key(const uint8_t *internal_public_key,
 int zkp_bip340_tweak_private_key(const uint8_t *internal_private_key,
                                  const uint8_t *root_hash,
                                  uint8_t *output_private_key);
-
+int zkp_bip340_xonly_point_add_tweak(const uint8_t *internal_public_key,
+                                const uint8_t *tweak,
+                                uint8_t *output_public_key,
+                                int *parity);
 #endif
 
 #ifdef __cplusplus
