@@ -3,6 +3,7 @@
 #include <cstring>
 
 #import "memzero.h"
+#import "bip39.h"
 #import "bip32.h"
 #import "aes.h"
 #import "zkp_bip340.h"
@@ -167,7 +168,9 @@ RCT_EXPORT_METHOD(
   rejecter:(RCTPromiseRejectBlock)reject
 ) {
   const char *mnemonic = cryptolib::generateMnemonic((uint32_t)strength);
-  resolve([NSString stringWithUTF8String:mnemonic]);
+  NSString *result = [NSString stringWithUTF8String:mnemonic];
+  mnemonic_clear();
+  resolve(result);
 }
 
 RCT_EXPORT_METHOD(

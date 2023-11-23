@@ -6,6 +6,7 @@
 
 #include "memzero.h"
 #include "bip32.h"
+#include "bip39.h"
 #include "aes.h"
 #include "zkp_bip340.h"
 #include "zkp_context.h"
@@ -197,7 +198,9 @@ Java_com_cryptolib_CryptoLibModule_nativeGenerateMnemonic(
   __attribute__((unused)) jclass type,
   const jint strength
 ) {
-  return env->NewStringUTF(cryptolib::generateMnemonic((int)strength));
+  jstring result = env->NewStringUTF(cryptolib::generateMnemonic((int)strength));
+  mnemonic_clear();
+  return result;
 }
 
 extern "C"
